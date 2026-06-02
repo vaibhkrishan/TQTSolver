@@ -9,6 +9,8 @@
 
 class QBFFormula {
 public:
+  int num_variables;
+
   std::vector<QuantifierBlock> prefix;
   CNFMatrix matrix;
   std::unordered_map< VariableID, std::unordered_set<VariableID> > dependencies;

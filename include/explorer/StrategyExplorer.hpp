@@ -16,6 +16,7 @@
 
 class StrategyExplorer {
   public:
+    StrategyExplorer();
     SemanticOracle* oracle;
     SemanticCache* cache;
     SimplificationPipeline* pipeline;
@@ -25,14 +26,5 @@ class StrategyExplorer {
 
     SolverResult recurse(
         ResidualQBF qbf
-        );
-  private:
-    SolverResult combine_existential(
-        SolverResult left,
-        SolverResult right
-        );
-    SolverResult combine_universal(
-        SolverResult left,
-        SolverResult right
         );
 }; // class StrategyExplorer

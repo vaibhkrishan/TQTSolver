@@ -1,4 +1,11 @@
-#include "../../include/oracle/SemanticOracle.hpp"
+#include "oracle/SemanticOracle.hpp"
+#include "oracle/CNFTautChecker.hpp"
+#include "oracle/DepQBFSolver.hpp"
+
+SemanticOracle::SemanticOracle() {
+  taut_checker = new CNFTautChecker;
+  fqbf_solver = new DepQBFSolver;
+}
 
 bool SemanticOracle::is_taut(
     const ResidualQBF& qbf
@@ -12,21 +19,11 @@ bool SemanticOracle::is_fqbf(
   return fqbf_solver->is_fqbf(qbf);
 }
 
-SolverResult SemanticOracle::solve_fqbf(
-    const ResidualQBF& qbf
-    ) {
-  return fqbf_solver->solve(qbf);
-}
-
 bool SemanticOracle::equivalent(
     const ResidualQBF& left,
     const ResidualQBF& right
     ) {
-  ResidualQBF reduced =
-    equivalence_reducer->build_instance(
-        left,
-        right
-        );
-  return fqbf_solver->solve(reduced)
-    == SolverResult::TRUE_RESULT;
+  // TODO: encode the equivalence QBF
+  // and run FQBF to check equivalence
+  return false;
 }

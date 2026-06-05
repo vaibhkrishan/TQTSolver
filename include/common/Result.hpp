@@ -1,6 +1,10 @@
 #pragma once
 
-enum class SolverResult {
+#include <cstdint>
+
+using SolverResult = uint64_t;
+
+enum class OracleResult {
   TRUE_RESULT,
   FALSE_RESULT,
   UNKNOWN

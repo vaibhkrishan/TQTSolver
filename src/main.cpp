@@ -17,5 +17,14 @@ int main(int argc, char* argv[]) {
   std::cout
     << QBFFormatter::format(*formula)
     << std::endl;
+  ResidualQBF root;
+
+  root.formula = formula;
+
+  root.trail = nullptr;
+
+  StrategyExplorer explorer;
+
+  std::cout << "Result: " << explorer.recurse(root) << std::endl;
   return 0;
 }

@@ -14,4 +14,4 @@ public:
   std::vector<QuantifierBlock> prefix;
   CNFMatrix matrix;
   std::unordered_map< VariableID, std::unordered_set<VariableID> > dependencies;
-};
+}; // class QBFFormula

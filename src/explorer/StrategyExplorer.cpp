@@ -1,30 +1,45 @@
 #include "explorer/StrategyExplorer.hpp"
+#include "explorer/TrivialHeuristic.hpp"
+
+#include <iostream>
+
+StrategyExplorer::StrategyExplorer()
+{
+  oracle = new SemanticOracle;
+  cache = new SemanticCache;
+  pipeline = new SimplificationPipeline;
+  canonicalizer = new Canonicalizer;
+  heuristic = new TrivialHeuristic;
+  brancher = new GameBrancher;
+}
 
 SolverResult StrategyExplorer::recurse(
     ResidualQBF qbf
     ) {
   pipeline->run(qbf);
+  const auto& formula = qbf.materialize();
   std::string key =
     canonicalizer->canonicalize(qbf);
+
   if (cache->contains(key)) {
     return cache->lookup(key);
   }
   if (oracle->is_taut(qbf)) {
+    auto tautCount = qbf.count_tautological_strategies();
     cache->insert(
         key,
-        SolverResult::TRUE_RESULT
+        tautCount
         );
-    return SolverResult::TRUE_RESULT;
+    return tautCount;
   }
 
   if (oracle->is_fqbf(qbf)) {
-    SolverResult result =
-      oracle->solve_fqbf(qbf);
-    cache->insert(key, result);
-    return result;
+    cache->insert(key, 0); // return 0 for fqbf
+    return 0;
   }
   VariableID variable =
     heuristic->choose_variable(qbf);
+  std::cout << "variable " << variable << std::endl;
   ResidualQBF left =
     brancher->branch(
         qbf,
@@ -52,60 +67,14 @@ SolverResult StrategyExplorer::recurse(
         qbf,
         variable
         )) {
-    final_result =
-      combine_existential(
-          left_result,
-          right_result
-          );
+    final_result = left_result + right_result;
   }
   else {
-    final_result =
-      combine_universal(
-          left_result,
-          right_result
-          );
+    final_result = left_result * right_result;
   }
   cache->insert(
       key,
       final_result
       );
   return final_result;
-}
-
-SolverResult StrategyExplorer::combine_existential(
-    SolverResult left,
-    SolverResult right
-    ) {
-  if (
-      left == SolverResult::TRUE_RESULT ||
-      right == SolverResult::TRUE_RESULT
-     ) {
-    return SolverResult::TRUE_RESULT;
-  }
-  if (
-      left == SolverResult::FALSE_RESULT &&
-      right == SolverResult::FALSE_RESULT
-     ) {
-    return SolverResult::FALSE_RESULT;
-  }
-  return SolverResult::UNKNOWN;
-}
-
-SolverResult StrategyExplorer::combine_universal(
-    SolverResult left,
-    SolverResult right
-    ) {
-  if (
-      left == SolverResult::FALSE_RESULT ||
-      right == SolverResult::FALSE_RESULT
-     ) {
-    return SolverResult::FALSE_RESULT;
-  }
-  if (
-      left == SolverResult::TRUE_RESULT &&
-      right == SolverResult::TRUE_RESULT
-     ) {
-    return SolverResult::TRUE_RESULT;
-  }
-  return SolverResult::UNKNOWN;
 }

@@ -1,9 +1,10 @@
 #include "explorer/StrategyExplorer.hpp"
 #include "explorer/TrivialHeuristic.hpp"
 
-#include <iostream>
-
 StrategyExplorer::StrategyExplorer()
+  :
+    checkpoint_manager_("checkpoint.log"),
+    tree_writer_("tree.txt")
 {
   oracle = new SemanticOracle;
   cache = new SemanticCache;
@@ -13,67 +14,345 @@ StrategyExplorer::StrategyExplorer()
   brancher = new GameBrancher;
 }
 
-SolverResult StrategyExplorer::recurse(
-    ResidualQBF qbf
+void
+StrategyExplorer::explore(
+    const ResidualQBF& root
     ) {
-  pipeline->run(qbf);
-  const auto& formula = qbf.materialize();
-  std::string key =
-    canonicalizer->canonicalize(qbf);
 
-  if (cache->contains(key)) {
-    return cache->lookup(key);
+  NodeID root_id =
+    create_root_node(root);
+
+  work_queue_.push(
+      {root_id}
+      );
+
+  WorkItem item;
+
+  std::size_t processed = 0;
+
+  while (
+      work_queue_.pop(item)
+      ) {
+
+    process_node(
+        item.id
+        );
+
+    ++processed;
+
+    if (
+        processed % 1000 == 0
+       ) {
+
+      tree_writer_
+        .capture(state_);
+
+      tree_writer_
+        .flush();
+
+      checkpoint_manager_
+        .flush();
+    }
   }
-  if (oracle->is_taut(qbf)) {
-    auto tautCount = qbf.count_tautological_strategies();
+
+  tree_writer_
+    .capture(state_);
+
+  tree_writer_
+    .flush();
+
+  checkpoint_manager_
+    .flush();
+}
+
+NodeID
+StrategyExplorer::create_root_node(
+    const ResidualQBF& qbf
+    ) {
+
+  NodeID id =
+    state_.allocate_node_id();
+
+  SearchNode node;
+
+  node.id = id;
+
+  node.depth = 0;
+
+  node.status =
+    NodeStatus::OPEN;
+
+  node.qbf = std::make_shared<ResidualQBF>(
+      qbf
+      );
+
+  state_.nodes[id] =
+    std::move(node);
+
+  checkpoint_manager_
+    .append_node(
+        state_.nodes[id]
+        );
+
+  return id;
+}
+
+NodeID
+StrategyExplorer::create_node(
+    const ResidualQBF& qbf,
+    std::size_t depth
+    ) {
+
+  NodeID id =
+    state_.allocate_node_id();
+
+  SearchNode node;
+
+  node.id = id;
+
+  node.depth = depth;
+
+  node.status =
+    NodeStatus::OPEN;
+
+  node.qbf = std::make_shared<ResidualQBF>(
+      qbf
+      );
+
+  state_.nodes[id] =
+    std::move(node);
+
+  checkpoint_manager_
+    .append_node(
+        state_.nodes[id]
+        );
+
+  return id;
+}
+
+void
+StrategyExplorer::add_edge(
+    NodeID parent,
+    NodeID child,
+    VariableID variable,
+    bool value
+    ) {
+
+  SearchEdge edge;
+
+  edge.parent = parent;
+
+  edge.child = child;
+
+  edge.variable = variable;
+
+  edge.value = value;
+
+  state_.edges.push_back(
+      edge
+      );
+
+  checkpoint_manager_
+    .append_edge(edge);
+}
+
+void
+StrategyExplorer::set_status(
+    NodeID id,
+    NodeStatus status
+    ) {
+
+  state_.nodes[id].status =
+    status;
+
+  checkpoint_manager_
+    .update_status(
+        id,
+        status
+        );
+}
+
+void
+StrategyExplorer::process_node(
+    NodeID node_id
+    ) {
+
+  SearchNode& node =
+    state_.nodes.at(
+        node_id
+        );
+
+  auto& qbf =
+    *node.qbf;
+
+  pipeline->run(qbf);
+
+  const auto& formula =
+    qbf.materialize();
+
+  (void) formula;
+
+  std::string key =
+    canonicalizer
+    ->canonicalize(
+        qbf
+        );
+
+  node.canonical_hash =
+    key;
+
+  if (
+      cache->contains(key)
+     ) {
+
+    set_status(
+        node_id,
+        NodeStatus::EXPANDED
+        );
+
+    return;
+  }
+
+  if (
+      oracle->is_taut(qbf)
+     ) {
+
+    auto taut_count =
+      qbf
+      .count_tautological_strategies();
+
     cache->insert(
         key,
-        tautCount
+        taut_count
         );
-    return tautCount;
+
+    set_status(
+        node_id,
+        NodeStatus::LEAF_TAUT
+        );
+
+    return;
   }
 
-  if (oracle->is_fqbf(qbf)) {
-    cache->insert(key, 0); // return 0 for fqbf
-    return 0;
+  if (
+      oracle->is_fqbf(qbf)
+     ) {
+
+    cache->insert(
+        key,
+        0
+        );
+
+    set_status(
+        node_id,
+        NodeStatus::LEAF_FQBF
+        );
+
+    return;
   }
+
   VariableID variable =
-    heuristic->choose_variable(qbf);
+    heuristic
+    ->choose_variable(
+        qbf
+        );
+
+  if (
+      variable < 0
+     ) {
+
+    set_status(
+        node_id,
+        NodeStatus::LEAF_COMPLETE
+        );
+
+    return;
+  }
+
   ResidualQBF left =
     brancher->branch(
         qbf,
         variable,
         false
         );
+
   ResidualQBF right =
     brancher->branch(
         qbf,
         variable,
         true
         );
-  if (oracle->equivalent(left, right)) {
-    SolverResult result =
-      recurse(left);
-    cache->insert(key, result);
-    return result;
-  }
-  SolverResult left_result =
-    recurse(left);
-  SolverResult right_result =
-    recurse(right);
-  SolverResult final_result;
-  if (heuristic->is_existential(
-        qbf,
-        variable
-        )) {
-    final_result = left_result + right_result;
+
+  if (
+      oracle->equivalent(
+        left,
+        right
+        )
+     ) {
+
+    NodeID child_id =
+      create_node(
+          left,
+          node.depth + 1
+          );
+
+    add_edge(
+        node.id,
+        child_id,
+        variable,
+        false
+        );
+
+    add_edge(
+        node.id,
+        child_id,
+        variable,
+        true
+        );
+
+    work_queue_.push(
+        {child_id}
+        );
   }
   else {
-    final_result = left_result * right_result;
+
+    NodeID left_id =
+      create_node(
+          left,
+          node.depth + 1
+          );
+
+    NodeID right_id =
+      create_node(
+          right,
+          node.depth + 1
+          );
+
+    add_edge(
+        node.id,
+        left_id,
+        variable,
+        false
+        );
+
+    add_edge(
+        node.id,
+        right_id,
+        variable,
+        true
+        );
+
+    work_queue_.push(
+        {left_id}
+        );
+
+    work_queue_.push(
+        {right_id}
+        );
   }
-  cache->insert(
-      key,
-      final_result
+
+  set_status(
+      node_id,
+      NodeStatus::EXPANDED
       );
-  return final_result;
 }

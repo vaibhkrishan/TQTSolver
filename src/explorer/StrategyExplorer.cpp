@@ -39,7 +39,6 @@ SolverResult StrategyExplorer::recurse(
   }
   VariableID variable =
     heuristic->choose_variable(qbf);
-  std::cout << "variable " << variable << std::endl;
   ResidualQBF left =
     brancher->branch(
         qbf,

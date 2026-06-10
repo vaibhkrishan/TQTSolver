@@ -24,6 +24,11 @@ StrategyExplorer::explore(
   NodeID root_id =
     create_node(root, 0);
 
+  checkpoint_manager_
+    .print_initial_formula(
+        root.materialize()
+        );
+
   work_queue_.push(
       {root_id}
       );

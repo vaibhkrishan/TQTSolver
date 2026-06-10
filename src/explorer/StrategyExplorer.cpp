@@ -1,6 +1,8 @@
 #include "explorer/StrategyExplorer.hpp"
 #include "explorer/TrivialHeuristic.hpp"
 
+#include <iostream>
+
 StrategyExplorer::StrategyExplorer()
   :
     checkpoint_manager_("checkpoint.log"),
@@ -20,7 +22,7 @@ StrategyExplorer::explore(
     ) {
 
   NodeID root_id =
-    create_root_node(root);
+    create_node(root, 0);
 
   work_queue_.push(
       {root_id}
@@ -66,38 +68,6 @@ StrategyExplorer::explore(
 }
 
 NodeID
-StrategyExplorer::create_root_node(
-    const ResidualQBF& qbf
-    ) {
-
-  NodeID id =
-    state_.allocate_node_id();
-
-  SearchNode node;
-
-  node.id = id;
-
-  node.depth = 0;
-
-  node.status =
-    NodeStatus::OPEN;
-
-  node.qbf = std::make_shared<ResidualQBF>(
-      qbf
-      );
-
-  state_.nodes[id] =
-    std::move(node);
-
-  checkpoint_manager_
-    .append_node(
-        state_.nodes[id]
-        );
-
-  return id;
-}
-
-NodeID
 StrategyExplorer::create_node(
     const ResidualQBF& qbf,
     std::size_t depth
@@ -118,6 +88,11 @@ StrategyExplorer::create_node(
   node.qbf = std::make_shared<ResidualQBF>(
       qbf
       );
+
+  node.canonical_hash =  canonicalizer
+    ->canonicalize(
+        qbf
+        );
 
   state_.nodes[id] =
     std::move(node);
@@ -190,16 +165,7 @@ StrategyExplorer::process_node(
   const auto& formula =
     qbf.materialize();
 
-  (void) formula;
-
-  std::string key =
-    canonicalizer
-    ->canonicalize(
-        qbf
-        );
-
-  node.canonical_hash =
-    key;
+  std::string key = node.canonical_hash;
 
   if (
       cache->contains(key)

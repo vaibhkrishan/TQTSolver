@@ -1,12 +1,18 @@
 #include "io/CheckpointManager.hpp"
 
 #include <fstream>
+#include <iostream>
 
 CheckpointManager::CheckpointManager(
     const std::string& filename
     )
   : filename_(filename)
 {
+  
+  std::ofstream out(
+      filename_
+      );
+  out.close();
 }
 
 void

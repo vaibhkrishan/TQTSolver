@@ -6,11 +6,17 @@
 #include "explorer/SearchNode.hpp"
 #include "explorer/SearchEdge.hpp"
 
+#include "formula/ResidualQBF.hpp"
+
 class CheckpointManager {
   public:
 
     explicit CheckpointManager(
         const std::string& filename
+        );
+
+    void print_initial_formula(
+        const QBFFormula& qbf
         );
 
     void append_node(

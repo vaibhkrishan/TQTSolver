@@ -1,5 +1,7 @@
 #include "io/CheckpointManager.hpp"
 
+#include "util/QDIMACSFormatter.hpp"
+
 #include <fstream>
 #include <iostream>
 
@@ -9,9 +11,21 @@ CheckpointManager::CheckpointManager(
   : filename_(filename)
 {
   
+}
+
+void CheckpointManager::print_initial_formula(
+    const QBFFormula& qbf
+    )
+{
+
   std::ofstream out(
       filename_
       );
+
+  out
+    << QDIMACSFormatter::format(qbf)
+    << "0\n"
+    << std::endl;
   out.close();
 }
 
@@ -89,6 +103,7 @@ CheckpointManager::flush() {
 
   out
     << buffer_.str();
+  out.close();
 
   buffer_.str("");
 

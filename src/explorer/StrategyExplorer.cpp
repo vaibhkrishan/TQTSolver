@@ -142,13 +142,13 @@ StrategyExplorer::set_status(
     NodeStatus status
     ) {
 
-  state_.nodes[id].status =
+  auto& node = state_.nodes[id];
+  node.status =
     status;
 
   checkpoint_manager_
-    .update_status(
-        id,
-        status
+    .update_node(
+        node
         );
 }
 
@@ -176,9 +176,10 @@ StrategyExplorer::process_node(
       cache->contains(key)
      ) {
 
+    node.value = cache->lookup(key);
     set_status(
         node_id,
-        NodeStatus::EXPANDED
+        NodeStatus::CACHE_HIT
         );
 
     return;
@@ -197,6 +198,7 @@ StrategyExplorer::process_node(
         taut_count
         );
 
+    node.value = taut_count;
     set_status(
         node_id,
         NodeStatus::LEAF_TAUT
@@ -214,6 +216,7 @@ StrategyExplorer::process_node(
         0
         );
 
+    node.value = 0;
     set_status(
         node_id,
         NodeStatus::LEAF_FQBF

@@ -27,9 +27,8 @@ class CheckpointManager {
         const SearchEdge& edge
         );
 
-    void update_status(
-        NodeID id,
-        NodeStatus status
+    void update_node(
+        const SearchNode& node
         );
 
     void flush();
@@ -39,8 +38,4 @@ class CheckpointManager {
     std::string filename_;
 
     std::stringstream buffer_;
-
-    static std::string status_to_string(
-        NodeStatus status
-        );
 }; // class CheckpointManager

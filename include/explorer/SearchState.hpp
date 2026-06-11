@@ -17,7 +17,7 @@ class SearchState {
 
     std::vector<SearchEdge> edges;
 
-    std::atomic<NodeID> next_node_id {0};
+    NodeID next_node_id {0};
 
     NodeID allocate_node_id();
 }; // class SearchState

@@ -2,36 +2,6 @@
 
 #include <fstream>
 
-namespace {
-
-  std::string
-    status_to_string(
-        NodeStatus status
-        ) {
-
-      switch (status) {
-
-        case NodeStatus::OPEN:
-          return "OPEN";
-
-        case NodeStatus::EXPANDED:
-          return "EXPANDED";
-
-        case NodeStatus::LEAF_TAUT:
-          return "LEAF_TAUT";
-
-        case NodeStatus::LEAF_FQBF:
-          return "LEAF_FQBF";
-
-        case NodeStatus::LEAF_COMPLETE:
-          return "LEAF_COMPLETE";
-      }
-
-      return "UNKNOWN";
-    }
-
-}
-
 TreeWriter::TreeWriter(
     const std::string& filename
     )
@@ -67,7 +37,7 @@ TreeWriter::capture(
 
     buffer_
       << "STATUS "
-      << status_to_string(
+      << common::status_to_string(
           node.status
           )
       << "\n\n";
@@ -102,8 +72,7 @@ void
 TreeWriter::flush() {
 
   std::ofstream out(
-      filename_,
-      std::ios::app
+      filename_
       );
 
   out << buffer_.str();

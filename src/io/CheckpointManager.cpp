@@ -45,13 +45,18 @@ CheckpointManager::append_node(
     << "\n";
 
   buffer_
+    << "VALUE "
+    << node.value
+    << "\n";
+
+  buffer_
     << "HASH "
     << node.canonical_hash
     << "\n";
 
   buffer_
     << "STATUS "
-    << status_to_string(
+    << common::status_to_string(
         node.status
         )
     << "\n\n";
@@ -71,24 +76,28 @@ CheckpointManager::append_edge(
     << edge.variable
     << " "
     << edge.value
-    << "\n";
+    << "\n\n";
 }
 
 void
-CheckpointManager::update_status(
-    NodeID id,
-    NodeStatus status
+CheckpointManager::update_node(
+    const SearchNode& node
     ) {
 
   buffer_
     << "UPDATE "
-    << id
+    << node.id
+    << "\n";
+
+  buffer_
+    << "VALUE "
+    << node.value
     << "\n";
 
   buffer_
     << "STATUS "
-    << status_to_string(
-        status
+    << common::status_to_string(
+        node.status
         )
     << "\n\n";
 }
@@ -108,30 +117,4 @@ CheckpointManager::flush() {
   buffer_.str("");
 
   buffer_.clear();
-}
-
-std::string
-CheckpointManager::status_to_string(
-    NodeStatus status
-    ) {
-
-  switch (status) {
-
-    case NodeStatus::OPEN:
-      return "OPEN";
-
-    case NodeStatus::EXPANDED:
-      return "EXPANDED";
-
-    case NodeStatus::LEAF_TAUT:
-      return "LEAF_TAUT";
-
-    case NodeStatus::LEAF_FQBF:
-      return "LEAF_FQBF";
-
-    case NodeStatus::LEAF_COMPLETE:
-      return "LEAF_COMPLETE";
-  }
-
-  return "UNKNOWN";
 }

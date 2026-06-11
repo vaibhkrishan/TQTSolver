@@ -4,6 +4,7 @@
 
 #include "explorer/NodeStatus.hpp"
 #include "formula/ResidualQBF.hpp"
+#include "common/Result.hpp"
 
 struct SearchNode {
 
@@ -14,6 +15,7 @@ struct SearchNode {
   std::string canonical_hash;
 
   NodeStatus status;
+  SolverResult value {0};
 
   std::shared_ptr<ResidualQBF> qbf;
 }; // struct SearchNode

@@ -1,5 +1,7 @@
 #include "explorer/NodeStatus.hpp"
 
+#include <iostream>
+
 namespace common {
 
   std::string
@@ -56,6 +58,7 @@ namespace common {
         return NodeStatus::LEAF_FQBF;
       }
 
+      std::cout << "str for status: " << s << std::endl;
       return NodeStatus::LEAF_COMPLETE;
     }
 

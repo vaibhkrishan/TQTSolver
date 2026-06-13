@@ -13,22 +13,6 @@ CheckpointManager::CheckpointManager(
   
 }
 
-void CheckpointManager::print_initial_formula(
-    const QBFFormula& qbf
-    )
-{
-
-  std::ofstream out(
-      filename_
-      );
-
-  out
-    << QDIMACSFormatter::format(qbf)
-    << "0\n"
-    << std::endl;
-  out.close();
-}
-
 void
 CheckpointManager::append_node(
     const SearchNode& node

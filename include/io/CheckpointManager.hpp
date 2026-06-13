@@ -15,10 +15,6 @@ class CheckpointManager {
         const std::string& filename
         );
 
-    void print_initial_formula(
-        const QBFFormula& qbf
-        );
-
     void append_node(
         const SearchNode& node
         );

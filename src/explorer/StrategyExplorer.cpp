@@ -3,10 +3,12 @@
 
 #include <iostream>
 
-StrategyExplorer::StrategyExplorer()
+StrategyExplorer::StrategyExplorer(std::string qbf_name, std::shared_ptr<QBFFormula> formula)
   :
-    checkpoint_manager_("checkpoint.log"),
-    tree_writer_("tree.txt")
+    qbf_name_(qbf_name),
+    checkpoint_manager_(qbf_name + ".explore"),
+    tree_reader_(qbf_name + ".explore"),
+    tree_writer_(qbf_name + ".tqt")
 {
   oracle = new SemanticOracle;
   cache = new SemanticCache;
@@ -14,31 +16,81 @@ StrategyExplorer::StrategyExplorer()
   canonicalizer = new Canonicalizer;
   heuristic = new TrivialHeuristic;
   brancher = new GameBrancher;
+
+  root.formula =
+    formula;
+
+  root.trail =
+    nullptr;
+}
+
+StrategyExplorer::~StrategyExplorer() {
+  delete oracle;
+  delete cache;
+  delete pipeline;
+  delete canonicalizer;
+  delete heuristic;
+  delete brancher;
 }
 
 void
 StrategyExplorer::explore(
-    const ResidualQBF& root
     ) {
 
-  NodeID root_id =
-    create_node(root, 0);
-
-  checkpoint_manager_
-    .print_initial_formula(
-        root.materialize()
-        );
-
-  work_queue_.push(
-      {root_id}
+  tree_reader_.read(
+      state_,
+      root,
+      brancher,
+      cache
       );
+
+  if (
+      state_.nodes.empty()
+     ) {
+
+    std::cout << "Exploring from root." << std::endl;
+    NodeID root_id =
+      create_node(
+          root,
+          0
+          );
+
+    work_queue_.push(
+        {root_id}
+        );
+  }
+  else {
+
+    std::cout << "Exploring from saved state";
+    int open_count = 0;
+    for (
+        const auto& [id, node]
+        : state_.nodes
+        ) {
+
+      if (
+          node.status
+          ==
+          NodeStatus::OPEN
+         ) {
+
+        work_queue_.push(
+            {id}
+            );
+        open_count++;
+      }
+    }
+    std::cout << ", number of open nodes: " << open_count << std::endl;
+  }
 
   WorkItem item;
 
   std::size_t processed = 0;
 
   while (
-      work_queue_.pop(item)
+      work_queue_.pop(
+        item
+        )
       ) {
 
     process_node(
@@ -48,11 +100,15 @@ StrategyExplorer::explore(
     ++processed;
 
     if (
-        processed % 1000 == 0
+        processed % 1000
+        ==
+        0
        ) {
 
       tree_writer_
-        .capture(state_);
+        .capture(
+            state_
+            );
 
       tree_writer_
         .flush();
@@ -63,7 +119,9 @@ StrategyExplorer::explore(
   }
 
   tree_writer_
-    .capture(state_);
+    .capture(
+        state_
+        );
 
   tree_writer_
     .flush();

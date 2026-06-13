@@ -19,11 +19,15 @@
 
 #include "io/CheckpointManager.hpp"
 #include "io/TreeWriter.hpp"
+#include "io/TreeReader.hpp"
+
+#include <string>
 
 class StrategyExplorer {
-public:
+  public:
 
-    StrategyExplorer();
+    StrategyExplorer(std::string, std::shared_ptr<QBFFormula>);
+    ~StrategyExplorer();
 
     SemanticOracle* oracle;
 
@@ -37,44 +41,44 @@ public:
 
     GameBrancher* brancher;
 
-    void explore(
-        const ResidualQBF& root
-    );
+    void explore();
 
-private:
+    ResidualQBF root;
 
+  private:
+
+    std::string qbf_name_;
     SearchState state_;
 
     WorkQueue work_queue_;
 
     CheckpointManager
-        checkpoint_manager_;
+      checkpoint_manager_;
+
+    TreeReader
+      tree_reader_;
 
     TreeWriter
-        tree_writer_;
-
-    NodeID create_root_node(
-        const ResidualQBF& qbf
-    );
+      tree_writer_;
 
     NodeID create_node(
         const ResidualQBF& qbf,
         std::size_t depth
-    );
+        );
 
     void add_edge(
         NodeID parent,
         NodeID child,
         VariableID variable,
         bool value
-    );
+        );
 
     void set_status(
         NodeID id,
         NodeStatus status
-    );
+        );
 
     void process_node(
         NodeID id
-    );
+        );
 }; // class StrategyExplorer

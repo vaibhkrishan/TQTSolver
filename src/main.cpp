@@ -1,4 +1,5 @@
 #include <iostream>
+#include <filesystem>
 
 #include "explorer/StrategyExplorer.hpp"
 
@@ -9,49 +10,42 @@ int
 main(
     int argc,
     char* argv[]
-) {
+    ) {
 
-    if (argc <= 1) {
+  if (argc <= 1) {
 
-        std::cerr
-            << "Please provide the file containing QBF definition"
-            << std::endl;
+    std::cerr
+      << "Please provide the file containing QBF definition"
+      << std::endl;
 
-        return 1;
-    }
+    return 1;
+  }
 
-    QDIMACSParser parser;
+  QDIMACSParser parser;
+  std::string iFileName(argv[1]);
+  std::filesystem::path iFilePath(iFileName);
+  iFilePath.replace_extension("");
 
-    auto formula =
-        parser.parse(
-            std::string(
-                argv[1]
-            )
+  auto qBFName = iFilePath.string();
+
+  auto formula =
+    parser.parse(
+        iFileName
         );
 
-    std::cout
-        << QBFFormatter::format(
-               *formula
-           )
-        << std::endl;
+  std::cout
+    << QBFFormatter::format(
+        *formula
+        )
+    << std::endl;
 
-    ResidualQBF root;
+  StrategyExplorer explorer(qBFName, formula);
 
-    root.formula =
-        formula;
+  explorer.explore();
 
-    root.trail =
-        nullptr;
+  std::cout
+    << "Exploration finished."
+    << std::endl;
 
-    StrategyExplorer explorer;
-
-    explorer.explore(
-        root
-    );
-
-    std::cout
-        << "Exploration finished."
-        << std::endl;
-
-    return 0;
+  return 0;
 }

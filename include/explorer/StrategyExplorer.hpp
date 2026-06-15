@@ -45,6 +45,8 @@ class StrategyExplorer {
 
     ResidualQBF root;
 
+    const SearchState&
+      state() const;
   private:
 
     std::string qbf_name_;

@@ -3,6 +3,8 @@
 
 #include "explorer/StrategyExplorer.hpp"
 
+#include "evaluator/CountEvaluator.hpp"
+
 #include "util/QDIMACSParser.hpp"
 #include "util/QBFFormatter.hpp"
 
@@ -45,6 +47,19 @@ main(
 
   std::cout
     << "Exploration finished."
+    << std::endl;
+
+  CountEvaluator evaluator;
+
+  SolverResult result =
+    evaluator.evaluate(
+        explorer.state(),
+        *formula
+        );
+  
+  std::cout
+    << "Count result: "
+    << result
     << std::endl;
 
   return 0;

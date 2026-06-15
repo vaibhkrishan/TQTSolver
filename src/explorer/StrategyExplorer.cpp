@@ -388,3 +388,8 @@ StrategyExplorer::process_node(
       NodeStatus::EXPANDED
       );
 }
+
+const SearchState&
+StrategyExplorer::state() const {
+  return state_;
+}

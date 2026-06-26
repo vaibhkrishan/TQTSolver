@@ -20,30 +20,3 @@ TrivialHeuristic::choose_variable(
 
     return -1;
 }
-
-bool
-TrivialHeuristic::is_existential(
-    const ResidualQBF& qbf,
-    VariableID variable
-) {
-
-    const QBFFormula& formula =
-        qbf.materialize();
-
-    for (const auto& block :
-         formula.prefix) {
-
-        for (VariableID var :
-             block.variables) {
-
-            if (var == variable) {
-
-                return
-                    block.type ==
-                    QuantifierType::EXISTS;
-            }
-        }
-    }
-
-    return false;
-}

@@ -6,8 +6,8 @@
 
 class DepQBFSolver : public FQBFSolver {
   public:
-    virtual bool is_fqbf(
+    virtual OracleResult is_fqbf(
         const ResidualQBF& qbf
-        );
+        ) override;
     virtual ~DepQBFSolver() = default;
 }; // class DepQBFSolver

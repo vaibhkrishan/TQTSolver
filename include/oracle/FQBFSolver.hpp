@@ -5,8 +5,8 @@
 
 class FQBFSolver {
   public:
-    virtual bool is_fqbf(
+    virtual OracleResult is_fqbf(
         const ResidualQBF& qbf
-        ) = 0;
+        );
     virtual ~FQBFSolver() = default;
 }; // class FQBFSolver

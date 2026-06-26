@@ -161,3 +161,4 @@ uint64_t ResidualQBF::count_tautological_strategies() const {
 
   return total;
 }
+

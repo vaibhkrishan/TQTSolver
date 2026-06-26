@@ -16,7 +16,7 @@ class SemanticOracle {
     bool is_taut(
         const ResidualQBF& qbf
         );
-    bool is_fqbf(
+    OracleResult is_fqbf(
         const ResidualQBF& qbf
         );
 }; // class SemanticOracle

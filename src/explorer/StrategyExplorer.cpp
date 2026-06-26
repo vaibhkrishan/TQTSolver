@@ -265,8 +265,9 @@ StrategyExplorer::process_node(
     return;
   }
 
+  auto fqbf_oracle_result = oracle->is_fqbf(qbf);
   if (
-      oracle->is_fqbf(qbf)
+      fqbf_oracle_result == OracleResult::FALSE_RESULT
      ) {
 
     cache->insert(

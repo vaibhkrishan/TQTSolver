@@ -199,10 +199,7 @@ SolverResult CountEvaluator::evaluate(
         .variable;
 
       bool existential =
-        is_existential(
-            formula,
-            variable
-            );
+            formula.get_quantifier_type(variable) == QuantifierType::EXISTS;
 
       SolverResult result;
 

@@ -8,9 +8,5 @@ class TrivialHeuristic : public BranchingHeuristic{
     virtual VariableID choose_variable(
         const ResidualQBF& qbf
         );
-    virtual bool is_existential(
-        const ResidualQBF& qbf,
-        VariableID variable
-        );
     virtual ~TrivialHeuristic() = default;
 }; // class BranchingHeuristic

@@ -13,7 +13,7 @@ bool SemanticOracle::is_taut(
   return taut_checker->is_taut(qbf);
 }
 
-bool SemanticOracle::is_fqbf(
+OracleResult SemanticOracle::is_fqbf(
     const ResidualQBF& qbf
     ) {
   return fqbf_solver->is_fqbf(qbf);

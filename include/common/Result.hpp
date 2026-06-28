@@ -1,8 +1,9 @@
 #pragma once
 
 #include <cstdint>
+#include <boost/multiprecision/gmp.hpp>
 
-using SolverResult = uint64_t;
+using SolverResult = boost::multiprecision::mpz_int;
 
 enum class OracleResult {
   TRUE_RESULT,

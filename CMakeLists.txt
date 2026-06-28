@@ -19,3 +19,9 @@ target_include_directories(
   qbf_solver
   PRIVATE include
 )
+
+target_link_libraries(
+  qbf_solver
+  PRIVATE
+  gmp
+)

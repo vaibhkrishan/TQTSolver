@@ -106,7 +106,6 @@ QDIMACSParser::parse(const std::string& filename) {
     formula->prefix.insert(formula->prefix.begin(), block);
   }
 
-  formula.prefix.push_back(block);
   return formula;
 }
 

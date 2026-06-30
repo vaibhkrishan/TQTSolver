@@ -23,13 +23,13 @@ private:
     void parse_quantifier_line(
         const std::string& line,
         QBFFormula& formula,
-        std::unordered_set<int>& prefix_vars
+        std::unordered_set<VariableID>& prefix_vars
     );
 
     void parse_clause_line(
         const std::string& line,
         QBFFormula& formula,
-        std::unordered_set<int>& clause_vars
+        std::unordered_set<VariableID>& clause_vars
     );
 
     QuantifierType parse_quantifier_type(char c);

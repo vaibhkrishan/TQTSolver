@@ -18,7 +18,5 @@ ResidualQBF GameBrancher::branch(
     child.restricted_formula =
         nullptr;
 
-    child.canonical_hash.clear();
-
     return child;
 }

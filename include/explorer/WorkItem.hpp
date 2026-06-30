@@ -1,6 +1,6 @@
 #pragma once
 
-#include "explorer/NodeStatus.hpp"
+#include "common/Types.hpp"
 
 struct WorkItem {
 

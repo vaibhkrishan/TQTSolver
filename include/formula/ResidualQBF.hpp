@@ -3,8 +3,9 @@
 #include <memory>
 #include <string>
 
-#include "QBFFormula.hpp"
-#include "../assignment/AssignmentTrail.hpp"
+#include "formula/QBFFormula.hpp"
+#include "assignment/AssignmentTrail.hpp"
+#include "common/Result.hpp"
 
 class ResidualQBF {
 public:
@@ -14,5 +15,5 @@ public:
   mutable std::string canonical_hash;
 
   const QBFFormula& materialize() const;
-  uint64_t count_tautological_strategies() const;
+  SolverResult count_tautological_strategies() const;
 };

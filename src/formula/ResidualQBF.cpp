@@ -117,12 +117,12 @@ const QBFFormula& ResidualQBF::materialize() const {
   return *restricted_formula;
 }
 
-uint64_t ResidualQBF::count_tautological_strategies() const {
+SolverResult ResidualQBF::count_tautological_strategies() const {
 
   const auto& formula = materialize();
-  uint64_t total = 1;
+  SolverResult total = 1;
 
-  size_t universal_count = 0;
+  uint64_t universal_count = 0;
 
   for (const auto& block : formula.prefix) {
 
@@ -143,16 +143,16 @@ uint64_t ResidualQBF::count_tautological_strategies() const {
         ++i
         ) {
 
-      uint64_t strategies =
+      uint64_t strategies_exponent =
         (
-         uint64_t(1)
+         1
          << universal_count
         );
 
-      strategies =
-        (
-         uint64_t(1)
-         << strategies
+      SolverResult strategies =
+        boost::multiprecision::pow(
+         SolverResult(1),
+         strategies_exponent
         );
 
       total *= strategies;

@@ -14,9 +14,6 @@ TreeWriter::capture(
     const SearchState& state
     ) {
 
-  buffer_
-    << "=== SNAPSHOT ===\n";
-
   for (const auto& [id, node] :
       state.nodes) {
 
@@ -31,8 +28,18 @@ TreeWriter::capture(
       << "\n";
 
     buffer_
-      << "HASH "
-      << node.canonical_hash
+      << "VALUE "
+      << node.value
+      << "\n";
+
+    buffer_
+      << "MULTIPLIER_EXPONENT "
+      << node.multiplier_exponent
+      << "\n";
+
+    buffer_
+      << "EQUIVALENT_NODE "
+      << node.equivalent_node
       << "\n";
 
     buffer_
@@ -53,7 +60,7 @@ TreeWriter::capture(
       << edge.child
       << " "
       << edge.variable
-      << "="
+      << " "
       << edge.value
       << "\n";
   }

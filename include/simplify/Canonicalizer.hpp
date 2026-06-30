@@ -4,9 +4,20 @@
 
 #include "../formula/ResidualQBF.hpp"
 
+struct CanonicalInfo {
+  std::string key;
+  ExponentType multiplier_exponent;
+
+  CanonicalInfo(std::string key,
+      ExponentType multiplier_exponent):
+    key(key),
+    multiplier_exponent(multiplier_exponent)
+  {}
+};
+
 class Canonicalizer {
   public:
-    std::string canonicalize(
+    CanonicalInfo canonicalize(
         const ResidualQBF& qbf
         );
 };

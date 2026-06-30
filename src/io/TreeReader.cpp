@@ -8,22 +8,6 @@
 
 #include "explorer/NodeStatus.hpp"
 
-namespace {
-
-  struct PendingNode {
-
-    SearchNode node;
-
-    bool seen_depth = false;
-
-    bool seen_hash = false;
-
-    bool seen_status = false;
-
-    bool seen_value = false;
-  };
-}
-
 TreeReader::TreeReader(
     const std::string& filename
     )
@@ -31,38 +15,24 @@ TreeReader::TreeReader(
 {
 }
 
-void
-TreeReader::read(
-    SearchState& state,
-    ResidualQBF& root,
-    GameBrancher* brancher,
-    SemanticCache* cache
-    ) const {
-  std::ifstream in(filename_);
+struct PendingNode {
 
-  if (!in) {
-    return;
-  }
+  SearchNode node;
 
-  struct PendingNode {
+  bool seen_depth = false;
 
-    SearchNode node;
+  bool seen_status = false;
 
-    bool seen_depth = false;
+  bool seen_value = false;
 
-    bool seen_status = false;
+  bool seen_equivalent = false;
 
-    bool seen_value = false;
-  };
+  bool seen_multiplier = false;
+};
 
-  std::unordered_map<
-    NodeID,
-    PendingNode
-      > pending_nodes;
-
-  std::vector<SearchEdge>
-    pending_edges;
-
+void parse_tree_file(std::ifstream& in,
+    std::unordered_map<NodeID, PendingNode>& pending_nodes,
+    std::vector<SearchEdge>& pending_edges) {
   std::string line;
 
   NodeID current_id = -1;
@@ -129,98 +99,6 @@ TreeReader::read(
     }
 
     if (
-        token == "UPDATE"
-       ) {
-
-      NodeID id;
-
-      ss >> id;
-
-      auto it =
-        pending_nodes.find(
-            id
-            );
-
-      if (
-          it ==
-          pending_nodes.end()
-         ) {
-        continue;
-      }
-
-      if (
-          !std::getline(
-            in,
-            line
-            )
-         ) {
-        break;
-      }
-
-      {
-        std::stringstream value_ss(
-            line
-            );
-
-        std::string label;
-
-        value_ss >> label;
-
-        if (
-            label == "VALUE"
-           ) {
-
-          value_ss
-            >> it->second
-            .node
-            .value;
-
-          it->second
-            .seen_value = true;
-        }
-      }
-
-      if (
-          !std::getline(
-            in,
-            line
-            )
-         ) {
-        break;
-      }
-
-      {
-        std::stringstream status_ss(
-            line
-            );
-
-        std::string label;
-        std::string status;
-
-        status_ss
-          >> label
-          >> status;
-
-        if (
-            label == "STATUS"
-           ) {
-
-          it->second
-            .node
-            .status =
-            common::parse_status(
-                status
-                );
-
-          it->second
-            .seen_status = true;
-        }
-      }
-
-      continue;
-    }
-
-    if (
         current_id < 0
        ) {
       continue;
@@ -268,32 +146,27 @@ TreeReader::read(
     }
 
     if (
-        token == "HASH"
+        token == "MULTIPLIER_EXPONENT"
        ) {
 
-      std::string hash;
+      ss >>
+        node.node.multiplier_exponent;
 
-      std::getline(
-          ss,
-          hash
-          );
+      node.seen_multiplier =
+        true;
 
-      if (
-          !hash.empty()
-          &&
-          hash.front()
-          == ' '
-         ) {
+      continue;
+    }
 
-        hash.erase(
-            0,
-            1
-            );
-      }
+    if (
+        token == "EQUIVALENT_NODE"
+       ) {
 
-      node.node
-        .canonical_hash =
-        hash;
+      ss >>
+        node.node.equivalent_node;
+
+      node.seen_equivalent =
+        true;
 
       continue;
     }
@@ -318,9 +191,11 @@ TreeReader::read(
     }
   }
 
-  std::unordered_set<NodeID>
-    complete_nodes;
+}
 
+void process_pending_nodes(
+    const std::unordered_map<NodeID, PendingNode>& pending_nodes,
+    std::unordered_set<NodeID>& complete_nodes) {
   for (
       const auto& [id, pending]
       : pending_nodes
@@ -332,6 +207,10 @@ TreeReader::read(
         pending.seen_status
         &&
         pending.seen_value
+        &&
+        pending.seen_equivalent
+        &&
+        pending.seen_multiplier
        ) {
 
       complete_nodes
@@ -341,17 +220,20 @@ TreeReader::read(
 
   if (
       !complete_nodes.contains(
-        0
+        root_id
         )
      ) {
     return;
   }
 
-  std::unordered_map<
-    NodeID,
-    std::vector<SearchEdge>
-      > outgoing;
+}
 
+void
+compute_reachable_nodes(
+    const std::unordered_set<NodeID>& complete_nodes,
+    const std::vector<SearchEdge>& pending_edges,
+    std::unordered_map<NodeID, std::vector<SearchEdge>>& outgoing,
+    std::unordered_set<NodeID>& reachable) {
   for (
       const auto& edge
       : pending_edges
@@ -375,14 +257,11 @@ TreeReader::read(
     }
   }
 
-  std::unordered_set<NodeID>
-    reachable;
-
   std::queue<NodeID> q;
 
-  q.push(0);
+  q.push(root_id);
 
-  reachable.insert(0);
+  reachable.insert(root_id);
 
   while (
       !q.empty()
@@ -410,10 +289,53 @@ TreeReader::read(
       }
     }
   }
+}
+
+void
+TreeReader::read(
+    SearchState& state,
+    ResidualQBF& root,
+    GameBrancher* brancher,
+    SemanticCache* cache,
+    Canonicalizer* canonicalizer
+    ) const {
+  std::ifstream in(filename_);
+
+  if (!in) {
+    return;
+  }
+
+  std::unordered_map<
+    NodeID,
+    PendingNode
+      > pending_nodes;
+
+  std::vector<SearchEdge>
+    pending_edges;
+
+  parse_tree_file(in, pending_nodes, pending_edges);
+
+  std::unordered_set<NodeID>
+    complete_nodes;
+
+  process_pending_nodes(pending_nodes, complete_nodes);
+
+  std::unordered_set<NodeID>
+    reachable;
+
+  std::unordered_map<
+    NodeID,
+    std::vector<SearchEdge>
+      > outgoing;
+
+  compute_reachable_nodes(complete_nodes,
+      pending_edges,
+      outgoing,
+      reachable);
 
   SearchState recovered;
 
-  NodeID max_id = 0;
+  NodeID max_id = root_id;
 
   for (
       NodeID id
@@ -421,7 +343,7 @@ TreeReader::read(
       ) {
 
     recovered.nodes[id] =
-      pending_nodes[id]
+      pending_nodes.at(id)
       .node;
 
     max_id =
@@ -457,7 +379,7 @@ TreeReader::read(
     max_id + 1;
 
   recovered
-    .nodes[0]
+    .nodes.at(root_id)
     .qbf =
     std::make_shared<ResidualQBF>(root);
 
@@ -465,7 +387,7 @@ TreeReader::read(
     reconstruct_queue;
 
   reconstruct_queue.push(
-      0
+      root_id
       );
 
   while (
@@ -521,24 +443,22 @@ TreeReader::read(
       : recovered.nodes
       ) {
 
-    if (
-        node.canonical_hash.empty()
-       ) {
-      continue;
-    }
-
     switch (
         node.status
         ) {
 
-      case NodeStatus::CACHE_HIT:
       case NodeStatus::LEAF_TAUT:
       case NodeStatus::LEAF_FQBF:
-      case NodeStatus::LEAF_COMPLETE:
-
+      case NodeStatus::EXPANDED:
         cache->insert(
-            node.canonical_hash,
-            node.value
+            canonicalizer
+            ->canonicalize(
+              *node.qbf
+              ).key,
+            CacheEntry(
+              id,
+              node.multiplier_exponent
+              )
             );
 
         break;

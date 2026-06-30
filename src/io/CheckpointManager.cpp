@@ -34,8 +34,13 @@ CheckpointManager::append_node(
     << "\n";
 
   buffer_
-    << "HASH "
-    << node.canonical_hash
+    << "MULTIPLIER_EXPONENT "
+    << node.multiplier_exponent
+    << "\n";
+
+  buffer_
+    << "EQUIVALENT_NODE "
+    << node.equivalent_node
     << "\n";
 
   buffer_
@@ -76,6 +81,16 @@ CheckpointManager::update_node(
   buffer_
     << "VALUE "
     << node.value
+    << "\n";
+
+  buffer_
+    << "MULTIPLIER_EXPONENT "
+    << node.multiplier_exponent
+    << "\n";
+
+  buffer_
+    << "EQUIVALENT_NODE "
+    << node.equivalent_node
     << "\n";
 
   buffer_

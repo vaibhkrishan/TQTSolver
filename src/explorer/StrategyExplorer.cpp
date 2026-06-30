@@ -7,7 +7,7 @@ StrategyExplorer::StrategyExplorer(std::string qbf_name, std::shared_ptr<QBFForm
   :
     qbf_name_(qbf_name),
     checkpoint_manager_(qbf_name + ".explore"),
-    tree_reader_(qbf_name + ".explore"),
+    tree_reader_(qbf_name + ".tqt"),
     tree_writer_(qbf_name + ".tqt")
 {
   oracle = new SemanticOracle;
@@ -41,7 +41,8 @@ StrategyExplorer::explore(
       state_,
       root,
       brancher,
-      cache
+      cache,
+      canonicalizer
       );
 
   if (
@@ -61,7 +62,7 @@ StrategyExplorer::explore(
   }
   else {
 
-    std::cout << "Exploring from saved state";
+    std::cout << "Exploring from saved state, total nodes: " << state_.nodes.size();
     int open_count = 0;
     for (
         const auto& [id, node]
@@ -80,7 +81,7 @@ StrategyExplorer::explore(
         open_count++;
       }
     }
-    std::cout << ", number of open nodes: " << open_count << std::endl;
+    std::cout << ", open nodes: " << open_count << std::endl;
   }
 
   WorkItem item;
@@ -151,11 +152,6 @@ StrategyExplorer::create_node(
   node.qbf = std::make_shared<ResidualQBF>(
       qbf
       );
-
-  node.canonical_hash =  canonicalizer
-    ->canonicalize(
-        qbf
-        );
 
   state_.nodes[id] =
     std::move(node);
@@ -228,20 +224,30 @@ StrategyExplorer::process_node(
   const auto& formula =
     qbf.materialize();
 
-  std::string key = node.canonical_hash;
+  auto canonical_info =  canonicalizer
+    ->canonicalize(
+        qbf
+        );
+  node.multiplier_exponent = canonical_info.multiplier_exponent;
 
   if (
-      cache->contains(key)
+      cache->contains(canonical_info.key)
      ) {
 
-    node.value = cache->lookup(key);
+    auto cache_entry = cache->lookup(canonical_info.key);
+    node.equivalent_node = cache_entry.node_id;
     set_status(
         node_id,
-        NodeStatus::CACHE_HIT
+        NodeStatus::SEEN
         );
 
     return;
   }
+
+  cache->insert(
+      canonical_info.key,
+      CacheEntry(node_id, canonical_info.multiplier_exponent)
+      );
 
   if (
       oracle->is_taut(qbf)
@@ -250,11 +256,6 @@ StrategyExplorer::process_node(
     auto taut_count =
       qbf
       .count_tautological_strategies();
-
-    cache->insert(
-        key,
-        taut_count
-        );
 
     node.value = taut_count;
     set_status(
@@ -270,11 +271,6 @@ StrategyExplorer::process_node(
       fqbf_oracle_result == OracleResult::FALSE_RESULT
      ) {
 
-    cache->insert(
-        key,
-        0
-        );
-
     node.value = 0;
     set_status(
         node_id,
@@ -289,18 +285,6 @@ StrategyExplorer::process_node(
     ->choose_variable(
         qbf
         );
-
-  if (
-      variable < 0
-     ) {
-
-    set_status(
-        node_id,
-        NodeStatus::LEAF_COMPLETE
-        );
-
-    return;
-  }
 
   ResidualQBF left =
     brancher->branch(

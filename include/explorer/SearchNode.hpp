@@ -12,7 +12,8 @@ struct SearchNode {
 
   std::size_t depth;
 
-  std::string canonical_hash;
+  NodeID equivalent_node {0};
+  ExponentType multiplier_exponent {0};
 
   NodeStatus status;
   SolverResult value {0};

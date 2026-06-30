@@ -15,10 +15,9 @@ namespace {
 
     switch (status) {
 
-      case NodeStatus::CACHE_HIT:
+      case NodeStatus::SEEN:
       case NodeStatus::LEAF_TAUT:
       case NodeStatus::LEAF_FQBF:
-      case NodeStatus::LEAF_COMPLETE:
         return true;
 
       default:
@@ -83,7 +82,7 @@ SolverResult CountEvaluator::evaluate(
       : state.nodes
       ) {
 
-    remaining_children[id] = 0;
+    remaining_children[id] = root_id;
   }
 
   for (
@@ -122,7 +121,7 @@ SolverResult CountEvaluator::evaluate(
 
     if (
         remaining_children[id]
-        == 0
+        == root_id
        ) {
 
       ready.push(id);
@@ -167,7 +166,7 @@ SolverResult CountEvaluator::evaluate(
           remaining_children[
           parent_id
           ]
-          != 0
+          != root_id
          ) {
 
         continue;
@@ -246,7 +245,7 @@ SolverResult CountEvaluator::evaluate(
   }
 
   auto root_it =
-    state.nodes.find(0);
+    state.nodes.find(root_id);
 
   if (
       root_it
@@ -258,5 +257,5 @@ SolverResult CountEvaluator::evaluate(
         );
   }
 
-  return value.at(0);
+  return value.at(root_id);
 }

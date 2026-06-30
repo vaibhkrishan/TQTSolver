@@ -6,6 +6,7 @@
 #include "explorer/GameBrancher.hpp"
 
 #include "cache/SemanticCache.hpp"
+#include "simplify/Canonicalizer.hpp"
 
 class TreeReader {
   public:
@@ -18,7 +19,8 @@ class TreeReader {
         SearchState&,
         ResidualQBF&,
         GameBrancher*,
-        SemanticCache*
+        SemanticCache*,
+        Canonicalizer*
         ) const;
 
   private:

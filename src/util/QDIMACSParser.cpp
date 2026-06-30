@@ -24,8 +24,8 @@ QDIMACSParser::parse(const std::string& filename) {
   int declared_clauses = 0;
   int clauses_read = 0;
 
-  std::unordered_set<int> prefix_vars;
-  std::unordered_set<int> clause_vars;
+  std::unordered_set<VariableID> prefix_vars;
+  std::unordered_set<VariableID> clause_vars;
 
   while (std::getline(input, line)) {
 
@@ -90,9 +90,9 @@ QDIMACSParser::parse(const std::string& filename) {
   }
 
   // add missing variables as outer existential block
-  std::vector<int> missing;
+  std::vector<VariableID> missing;
 
-  for (int v : clause_vars) {
+  for (VariableID v : clause_vars) {
     if (!prefix_vars.count(v)) {
       missing.push_back(v);
     }
@@ -131,7 +131,7 @@ void QDIMACSParser::parse_problem_line(
 void QDIMACSParser::parse_quantifier_line(
     const std::string& line,
     QBFFormula& formula,
-    std::unordered_set<int>& prefix_vars
+    std::unordered_set<VariableID>& prefix_vars
     ) {
   QuantifierBlock block;
 
@@ -139,7 +139,7 @@ void QDIMACSParser::parse_quantifier_line(
 
   std::stringstream ss(line.substr(1));
 
-  int var;
+  VariableID var;
 
   while (ss >> var) {
 
@@ -153,6 +153,7 @@ void QDIMACSParser::parse_quantifier_line(
       throw std::runtime_error("Duplicate variable in prefix.");
     }
 
+    formula.set_quantifier_type(var, block.type);
     block.variables.push_back(var);
   }
 
@@ -162,18 +163,18 @@ void QDIMACSParser::parse_quantifier_line(
 void QDIMACSParser::parse_clause_line(
     const std::string& line,
     QBFFormula& formula,
-    std::unordered_set<int>& clause_vars
+    std::unordered_set<VariableID>& clause_vars
     ) {
   std::stringstream ss(line);
 
-  std::vector<int> clause;
-  int lit;
+  std::vector<Literal> clause;
+  Literal lit;
 
   while (ss >> lit) {
 
     if (lit == 0) break;
 
-    int v = std::abs(lit);
+    VariableID v = std::abs(lit);
 
     if (v < 1 || v > formula.num_variables) {
       throw std::runtime_error("Variable out of bounds in clause.");

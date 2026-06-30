@@ -2,13 +2,14 @@
 
 #include <sstream>
 
-std::string
+CanonicalInfo
 Canonicalizer::canonicalize(
     const ResidualQBF& qbf
     ) {
 
   const auto& formula = qbf.materialize();
   std::unordered_map<int, int> renaming;
+  std::unordered_set<int> var_seen;
 
   int next_id = 1;
 
@@ -28,28 +29,6 @@ Canonicalizer::canonicalize(
 
   std::stringstream out;
 
-  for (const auto& block : formula.prefix) {
-
-    if (
-        block.type ==
-        QuantifierType::EXISTS
-       ) {
-      out << "E ";
-    }
-    else {
-      out << "A ";
-    }
-
-    for (int var : block.variables) {
-
-      out
-        << get_canonical_var(var)
-        << " ";
-    }
-
-    out << "| ";
-  }
-
   for (
       const auto& clause :
       formula.matrix.clauses
@@ -66,6 +45,7 @@ Canonicalizer::canonicalize(
       int lit = clause[i];
 
       int var = std::abs(lit);
+      var_seen.insert(var);
 
       int canon =
         get_canonical_var(var);
@@ -77,12 +57,41 @@ Canonicalizer::canonicalize(
       out << canon;
 
       if (i + 1 < clause.size()) {
-        out << " ";
+        out << "+";
       }
     }
 
     out << ")";
   }
 
-  return out.str();
+  ExponentType multiplier_exponent = 0;
+  ExponentType universals_seen = 0;
+
+
+  out << "|";
+  for (const auto& block : formula.prefix) {
+
+    if (
+        block.type ==
+        QuantifierType::EXISTS
+       ) {
+      out << "E-";
+    }
+    else {
+      out << "A-";
+      universals_seen++;
+    }
+
+    for (int var : block.variables) {
+
+      if (!var_seen.contains(var) and block.type == QuantifierType::EXISTS) {
+        multiplier_exponent += (static_cast<ExponentType>(1) << universals_seen);
+        continue;
+      }
+      out
+        << get_canonical_var(var)
+        << "_";
+    }
+  }
+  return CanonicalInfo(out.str(), multiplier_exponent);
 }

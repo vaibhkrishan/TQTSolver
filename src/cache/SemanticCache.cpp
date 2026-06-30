@@ -7,7 +7,7 @@ bool SemanticCache::contains(
     != value_cache.end();
 }
 
-SolverResult SemanticCache::lookup(
+CacheEntry SemanticCache::lookup(
     const std::string& key
     ) const {
   return value_cache.at(key);
@@ -15,7 +15,7 @@ SolverResult SemanticCache::lookup(
 
 void SemanticCache::insert(
     const std::string& key,
-    SolverResult result
+    CacheEntry result
     ) {
-  value_cache[key] = result;
+  value_cache[key] = std::move(result);
 }

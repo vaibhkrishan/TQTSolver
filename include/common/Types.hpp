@@ -1,6 +1,10 @@
 #pragma once
 
-# include <cstdint>
+#include <cstdint>
+#include <boost/multiprecision/gmp.hpp>
 
-using VariableID = int32_t;
-using Literal = int32_t;
+using ExponentType = uint64_t;
+
+using VariableID = uint64_t;
+using Literal = int64_t;
+using NodeID = uint64_t;

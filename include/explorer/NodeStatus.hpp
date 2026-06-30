@@ -3,15 +3,12 @@
 #include <cstdint>
 #include <string>
 
-using NodeID = std::uint64_t;
-
 enum class NodeStatus {
   OPEN,
   EXPANDED,
-  CACHE_HIT,
+  SEEN,
   LEAF_TAUT,
-  LEAF_FQBF,
-  LEAF_COMPLETE
+  LEAF_FQBF
 }; // enum class NodeStatus
 
 namespace common {

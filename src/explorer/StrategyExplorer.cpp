@@ -101,7 +101,7 @@ StrategyExplorer::explore(
     ++processed;
 
     if (
-        processed % 1000
+        processed % 100
         ==
         0
        ) {

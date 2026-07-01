@@ -29,6 +29,7 @@ Canonicalizer::canonicalize(
 
   std::stringstream out;
 
+  out << formula.num_variables << "|";
   for (
       const auto& clause :
       formula.matrix.clauses

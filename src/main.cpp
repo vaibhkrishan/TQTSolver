@@ -49,13 +49,13 @@ main(
     << "Exploration finished."
     << std::endl;
 
-  CountEvaluator evaluator;
-
-  SolverResult result =
-    evaluator.evaluate(
+  CountEvaluator evaluator(
         explorer.state(),
         *formula
-        );
+      );
+
+  SolverResult result =
+    evaluator.evaluate();
   
   std::cout
     << "Count result: "

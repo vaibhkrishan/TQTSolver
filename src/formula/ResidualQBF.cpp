@@ -8,6 +8,7 @@ const QBFFormula& ResidualQBF::materialize() const {
     std::make_shared<QBFFormula>(
         *formula
         );
+  restricted_formula->num_variables = 0;
 
   std::unordered_map<
     VariableID,
@@ -101,6 +102,7 @@ const QBFFormula& ResidualQBF::materialize() const {
 
         new_block.variables
           .push_back(var);
+        restricted_formula->num_variables++;
       }
     }
 

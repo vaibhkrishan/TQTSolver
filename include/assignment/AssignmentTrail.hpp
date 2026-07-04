@@ -2,7 +2,7 @@
 
 #include <memory>
 
-#include "../common/Types.hpp"
+#include "common/Types.hpp"
 
 class AssignmentTrail {
 public:

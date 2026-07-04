@@ -25,7 +25,7 @@ QBFFormatter::format_prefix(
   std::stringstream out;
   for (const auto& block : formula.prefix) {
     if (
-        block.type ==
+        block.get_type() ==
         QuantifierType::EXISTS
        ) {
       out << "E ";
@@ -33,7 +33,8 @@ QBFFormatter::format_prefix(
     else {
       out << "A ";
     }
-    for (int var : block.variables) {
+    const auto& vars = block.get_variables();
+    for (int var : vars) {
       out << var << " ";
     }
     out << "\n";

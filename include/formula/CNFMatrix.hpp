@@ -1,7 +1,7 @@
 #pragma once
 
 #include <vector>
-#include "../common/Types.hpp"
+#include "common/Types.hpp"
 
 class CNFMatrix {
 public:

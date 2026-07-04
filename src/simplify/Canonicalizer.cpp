@@ -73,7 +73,7 @@ Canonicalizer::canonicalize(
   for (const auto& block : formula.prefix) {
 
     if (
-        block.type ==
+        block.get_type() ==
         QuantifierType::EXISTS
        ) {
       out << "E-";
@@ -83,9 +83,10 @@ Canonicalizer::canonicalize(
       universals_seen++;
     }
 
-    for (int var : block.variables) {
+    const auto& vars = block.get_variables();
+    for (int var : vars) {
 
-      if (!var_seen.contains(var) and block.type == QuantifierType::EXISTS) {
+      if (!var_seen.contains(var) and block.get_type() == QuantifierType::EXISTS) {
         multiplier_exponent += (static_cast<ExponentType>(1) << universals_seen);
         continue;
       }

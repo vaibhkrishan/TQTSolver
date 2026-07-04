@@ -21,15 +21,16 @@ QDIMACSFormatter::format(
 
     out
       << (
-          block.type ==
+          block.get_type() ==
           QuantifierType::EXISTS
           ? 'e'
           : 'a'
          )
       << " ";
 
+    const auto& vars = block.get_variables();
     for (VariableID var :
-        block.variables) {
+        vars) {
 
       out
         << var

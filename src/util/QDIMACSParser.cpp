@@ -99,9 +99,7 @@ QDIMACSParser::parse(const std::string& filename) {
   }
 
   if (!missing.empty()) {
-    QuantifierBlock block;
-    block.type = QuantifierType::EXISTS;
-    block.variables = missing;
+    QuantifierBlock block(QuantifierType::EXISTS, missing);
 
     formula->prefix.insert(formula->prefix.begin(), block);
   }
@@ -133,9 +131,7 @@ void QDIMACSParser::parse_quantifier_line(
     QBFFormula& formula,
     std::unordered_set<VariableID>& prefix_vars
     ) {
-  QuantifierBlock block;
-
-  block.type = parse_quantifier_type(line[0]);
+  QuantifierBlock block(parse_quantifier_type(line[0]));
 
   std::stringstream ss(line.substr(1));
 
@@ -153,8 +149,8 @@ void QDIMACSParser::parse_quantifier_line(
       throw std::runtime_error("Duplicate variable in prefix.");
     }
 
-    formula.set_quantifier_type(var, block.type);
-    block.variables.push_back(var);
+    formula.set_quantifier_type(var, block.get_type());
+    block.add_variable(var);
   }
 
   formula.prefix.push_back(block);
@@ -189,5 +185,6 @@ void QDIMACSParser::parse_clause_line(
 
 QuantifierType QDIMACSParser::parse_quantifier_type(char c) {
   if (c == 'e') return QuantifierType::EXISTS;
-  return QuantifierType::FORALL;
+  if (c == 'a') return QuantifierType::FORALL;
+  throw std::runtime_error("Unknown quantifier type: " + std::string(1, c));
 }

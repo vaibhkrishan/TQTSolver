@@ -7,34 +7,30 @@
 #include "formula/QBFFormula.hpp"
 
 class QDIMACSParser {
-public:
+  public:
 
     std::shared_ptr<QBFFormula>
-        parse(const std::string& filename);
+      parse(const std::string&);
 
-private:
+  private:
 
     void parse_problem_line(
-    const std::string& line,
-    QBFFormula& formula,
-    int& declared_clauses
-);
+        const std::string&,
+        int&,
+        int&
+        );
 
     void parse_quantifier_line(
-        const std::string& line,
-        QBFFormula& formula,
-        std::unordered_set<VariableID>& prefix_vars
-    );
+        const std::string&,
+        std::vector<QuantifierBlock>&,
+        std::unordered_set<VariableID>&
+        );
 
     void parse_clause_line(
-        const std::string& line,
-        QBFFormula& formula,
-        std::unordered_set<VariableID>& clause_vars
-    );
+        const std::string&,
+        std::vector<std::vector<Literal>>&,
+        std::unordered_set<VariableID>&
+        );
 
-    QuantifierType parse_quantifier_type(char c);
-
-    std::vector<int> parse_integer_sequence(
-        const std::string& line
-    );
+    QuantifierType parse_quantifier_type(char);
 };

@@ -9,8 +9,6 @@
 std::shared_ptr<QBFFormula>
 QDIMACSParser::parse(const std::string& filename) {
 
-  auto formula = std::make_shared<QBFFormula>();
-
   std::ifstream input(filename);
   if (!input.is_open()) {
     throw std::runtime_error("Could not open QDIMACS file.");
@@ -22,9 +20,12 @@ QDIMACSParser::parse(const std::string& filename) {
   bool reading_clauses = false;
 
   int declared_clauses = 0;
-  int clauses_read = 0;
+  int declared_vars = 0;
 
+  std::vector<QuantifierBlock> prefix;
   std::unordered_set<VariableID> prefix_vars;
+
+  std::vector<std::vector<Literal>> clauses;
   std::unordered_set<VariableID> clause_vars;
 
   while (std::getline(input, line)) {
@@ -44,7 +45,7 @@ QDIMACSParser::parse(const std::string& filename) {
       }
 
       seen_problem = true;
-      parse_problem_line(line, *formula, declared_clauses);
+      parse_problem_line(line, declared_vars, declared_clauses);
       continue;
     }
 
@@ -63,29 +64,28 @@ QDIMACSParser::parse(const std::string& filename) {
             );
       }
 
-      parse_quantifier_line(line, *formula, prefix_vars);
+      parse_quantifier_line(line, prefix, prefix_vars);
       continue;
     }
 
     // clause line
     reading_clauses = true;
 
-    if (clauses_read >= declared_clauses) {
+    if (clauses.size() >= declared_clauses) {
       throw std::runtime_error(
           "More clauses than declared in problem line."
           );
     }
 
-    parse_clause_line(line, *formula, clause_vars);
-    clauses_read++;
+    parse_clause_line(line, clauses, clause_vars);
   }
 
   // ---- FINAL CHECKS ----
 
-  if (clauses_read != declared_clauses) {
+  if (clauses.size() < declared_clauses) {
     throw std::runtime_error(
         "Expected " + std::to_string(declared_clauses) +
-        " clauses but found " + std::to_string(clauses_read)
+        " clauses but found " + std::to_string(clauses.size())
         );
   }
 
@@ -93,7 +93,7 @@ QDIMACSParser::parse(const std::string& filename) {
   std::vector<VariableID> missing;
 
   for (VariableID v : clause_vars) {
-    if (!prefix_vars.count(v)) {
+    if (!prefix_vars.contains(v)) {
       missing.push_back(v);
     }
   }
@@ -101,34 +101,82 @@ QDIMACSParser::parse(const std::string& filename) {
   if (!missing.empty()) {
     QuantifierBlock block(QuantifierType::EXISTS, missing);
 
-    formula->prefix.insert(formula->prefix.begin(), block);
+    prefix.insert(prefix.begin(), block);
   }
 
+  auto formula = std::make_shared<QBFFormula>();
+
+  std::unordered_map<
+    VariableID,
+    VariableID
+      > old_to_new;
+
+  VariableID next = 1;
+
+  for (auto& block : prefix) {
+
+    QuantifierBlock new_block(block.get_type());
+
+    for (VariableID old : block.get_variables()) {
+
+      old_to_new[old] = next;
+
+      new_block.add_variable(next);
+
+      ++next;
+    }
+
+    formula->prefix.push_back(
+        std::move(new_block)
+        );
+  }
+
+  formula->num_variables = next - 1;
+
+  for (const auto& clause : clauses) {
+
+    std::vector<Literal> new_clause;
+
+    for (Literal lit : clause) {
+
+      VariableID var =
+        old_to_new.at(
+            std::abs(lit)
+            );
+
+      new_clause.push_back(
+          lit < 0
+          ? -var
+          : var
+          );
+    }
+
+    formula->matrix.clauses.push_back(
+        std::move(new_clause)
+        );
+  }
   return formula;
 }
 
 void QDIMACSParser::parse_problem_line(
     const std::string& line,
-    QBFFormula& formula,
+    int& declared_variables,
     int& declared_clauses
     ) {
   std::stringstream ss(line);
 
   std::string p, cnf;
 
-  ss >> p >> cnf >> formula.num_variables >> declared_clauses;
+  ss >> p >> cnf >> declared_variables >> declared_clauses;
 
   if (p != "p" || cnf != "cnf") {
     throw std::runtime_error("Invalid problem line.");
   }
-
-  formula.matrix.clauses.clear();
-  formula.matrix.clauses.reserve(declared_clauses);
 }
 
 void QDIMACSParser::parse_quantifier_line(
     const std::string& line,
-    QBFFormula& formula,
+    std::vector<QuantifierBlock>& prefix,
     std::unordered_set<VariableID>& prefix_vars
     ) {
   QuantifierBlock block(parse_quantifier_type(line[0]));
@@ -141,7 +189,7 @@ void QDIMACSParser::parse_quantifier_line(
 
     if (var == 0) break;
 
-    if (var < 1 || var > formula.num_variables) {
+    if (var < 1) {
       throw std::runtime_error("Variable out of bounds in prefix.");
     }
 
@@ -149,16 +197,15 @@ void QDIMACSParser::parse_quantifier_line(
       throw std::runtime_error("Duplicate variable in prefix.");
     }
 
-    formula.set_quantifier_type(var, block.get_type());
     block.add_variable(var);
   }
 
-  formula.prefix.push_back(block);
+  prefix.push_back(block);
 }
 
 void QDIMACSParser::parse_clause_line(
     const std::string& line,
-    QBFFormula& formula,
+    std::vector<std::vector<Literal>>& clauses,
     std::unordered_set<VariableID>& clause_vars
     ) {
   std::stringstream ss(line);
@@ -172,7 +219,7 @@ void QDIMACSParser::parse_clause_line(
 
     VariableID v = std::abs(lit);
 
-    if (v < 1 || v > formula.num_variables) {
+    if (v < 1) {
       throw std::runtime_error("Variable out of bounds in clause.");
     }
 
@@ -180,7 +227,7 @@ void QDIMACSParser::parse_clause_line(
     clause.push_back(lit);
   }
 
-  formula.matrix.clauses.push_back(clause);
+  clauses.push_back(clause);
 }
 
 QuantifierType QDIMACSParser::parse_quantifier_type(char c) {

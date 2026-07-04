@@ -88,25 +88,23 @@ const QBFFormula& ResidualQBF::materialize() const {
       restricted_formula->prefix
       ) {
 
-    QuantifierBlock new_block;
+    QuantifierBlock new_block(block.get_type());
 
-    new_block.type = block.type;
-
+    const auto& vars = block.get_variables();
     for (VariableID var :
-        block.variables) {
+        vars) {
 
       if (
           assignment.find(var)
           == assignment.end()
          ) {
 
-        new_block.variables
-          .push_back(var);
+        new_block.add_variable(var);
         restricted_formula->num_variables++;
       }
     }
 
-    if (!new_block.variables.empty()) {
+    if (!new_block.empty()) {
       new_prefix.push_back(
           new_block
           );
@@ -129,19 +127,19 @@ SolverResult ResidualQBF::count_tautological_strategies() const {
   for (const auto& block : formula.prefix) {
 
     if (
-        block.type ==
+        block.get_type() ==
         QuantifierType::FORALL
        ) {
 
       universal_count +=
-        block.variables.size();
+        block.size();
 
       continue;
     }
 
     for (
         size_t i = 0;
-        i < block.variables.size();
+        i < block.size();
         ++i
         ) {
 

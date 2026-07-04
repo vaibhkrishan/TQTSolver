@@ -2,7 +2,7 @@
 
 #include <string>
 
-#include "../formula/ResidualQBF.hpp"
+#include "formula/ResidualQBF.hpp"
 
 struct CanonicalInfo {
   std::string key;

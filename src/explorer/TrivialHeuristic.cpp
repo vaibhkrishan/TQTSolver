@@ -3,20 +3,22 @@
 VariableID
 TrivialHeuristic::choose_variable(
     const ResidualQBF& qbf
-) {
+    ) {
 
-    const QBFFormula& formula =
-        qbf.materialize();
+  const QBFFormula& formula =
+    qbf.materialize();
 
-    for (const auto& block :
-         formula.prefix) {
+  for (const auto& block :
+      formula.prefix) {
 
-        for (VariableID var :
-             block.variables) {
 
-            return var;
-        }
+    const auto& vars = block.get_variables();
+    for (VariableID var :
+        vars) {
+
+      return var;
     }
+  }
 
-    return -1;
+  return -1;
 }

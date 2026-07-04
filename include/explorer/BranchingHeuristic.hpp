@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../formula/ResidualQBF.hpp"
+#include "formula/ResidualQBF.hpp"
 
 class BranchingHeuristic {
   public:

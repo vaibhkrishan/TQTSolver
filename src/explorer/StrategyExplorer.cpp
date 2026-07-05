@@ -1,5 +1,5 @@
 #include "explorer/StrategyExplorer.hpp"
-#include "explorer/TrivialHeuristic.hpp"
+#include "heuristic/TrivialHeuristic.hpp"
 
 #include <iostream>
 

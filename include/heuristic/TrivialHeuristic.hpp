@@ -1,7 +1,7 @@
 #pragma once
 
 #include "formula/ResidualQBF.hpp"
-#include "explorer/BranchingHeuristic.hpp"
+#include "heuristic/BranchingHeuristic.hpp"
 
 class TrivialHeuristic : public BranchingHeuristic{
   public:

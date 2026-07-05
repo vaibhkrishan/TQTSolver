@@ -1,5 +1,6 @@
 #include "explorer/StrategyExplorer.hpp"
 #include "heuristic/TrivialHeuristic.hpp"
+#include "simplify/DeactivateUnusedExistentials.hpp"
 
 #include <iostream>
 
@@ -216,6 +217,8 @@ StrategyExplorer::process_node(
 
   pipeline->run(qbf);
 
+  node.multiplier_exponent = DeactivateUnusedExistentials::apply(qbf);
+
   auto canonical_key =  canonicalizer
     ->canonicalize(
         qbf
@@ -291,6 +294,15 @@ StrategyExplorer::process_node(
         );
 
   if (
+      (qbf.get_quantifier_type(variable)
+      ==
+      QuantifierType::FORALL
+      and
+      qbf.get_variable_status(variable)
+      ==
+      VariableStatus::UNUSED
+      )
+      or
       oracle->equivalent(
         left,
         right

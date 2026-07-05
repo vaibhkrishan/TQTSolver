@@ -7,6 +7,7 @@
 
 class SimplificationPipeline {
   public:
+    SimplificationPipeline();
     std::vector<std::unique_ptr<Simplifier>> passes;
 
     void run(ResidualQBF& qbf);

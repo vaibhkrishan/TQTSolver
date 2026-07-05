@@ -77,7 +77,7 @@ CountEvaluator::evaluate_node(
     case NodeStatus::LEAF_TAUT:
 
       result =
-        node.value;
+        node.value * (SolverResult(1) << node.multiplier_exponent);
 
       break;
 
@@ -103,24 +103,23 @@ CountEvaluator::evaluate_node(
               node.equivalent_node
               );
 
-        auto delta =
-          node.multiplier_exponent
-          -
-          equivalent.multiplier_exponent;
-
         if (
-            delta > 0
+            node.multiplier_exponent
+            >=
+            equivalent.multiplier_exponent
            ) {
 
           result <<=
-            delta;
+            node.multiplier_exponent
+            -
+            equivalent.multiplier_exponent;
         }
-        else if (
-            delta < 0
-            ) {
+        else {
 
           result >>=
-            -delta;
+            equivalent.multiplier_exponent
+            -
+            node.multiplier_exponent;
         }
 
         break;
@@ -168,6 +167,7 @@ CountEvaluator::evaluate_node(
           }
         }
 
+        result *= SolverResult(1) << node.multiplier_exponent;
         break;
       }
 

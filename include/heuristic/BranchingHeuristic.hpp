@@ -5,7 +5,7 @@
 class BranchingHeuristic {
   public:
     virtual VariableID choose_variable(
-        const ResidualQBF& qbf
+        ResidualQBF& qbf
         ) = 0;
     virtual ~BranchingHeuristic() = default;
 }; // class BranchingHeuristic

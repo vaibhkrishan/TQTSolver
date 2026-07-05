@@ -34,13 +34,27 @@ Canonicalizer::canonicalize(
         : block.get_variables()
         ) {
 
+      auto var_status = qbf.get_variable_status(var);
       if (
-          qbf.modifier.variable_status[var]
+          block.get_type()
+          == QuantifierType::EXISTS
+          and
+          var_status
           != VariableStatus::ACTIVE
-         ) {
+         )
         continue;
-      }
 
+      if (
+          block.get_type()
+          == QuantifierType::FORALL
+          and
+          var_status
+          != VariableStatus::ACTIVE
+          and
+          var_status
+          != VariableStatus::UNUSED
+         )
+        continue;
       renaming[var] = next_id;
       active_variables.push_back(next_id);
 
@@ -103,11 +117,10 @@ Canonicalizer::canonicalize(
         std::abs(lit);
 
       if (
-          qbf.modifier.variable_status[var]
+          qbf.get_variable_status(var)
           != VariableStatus::ACTIVE
-         ) {
+         )
         continue;
-      }
 
       if (!first) {
         out << " ";

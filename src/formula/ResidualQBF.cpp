@@ -11,6 +11,16 @@ ResidualQBF::ResidualQBF(
 {
 }
 
+VariableStatus ResidualQBF::get_variable_status(
+    VariableID var) const {
+  return modifier.variable_status[var];
+}
+
+QuantifierType ResidualQBF::get_quantifier_type (
+    VariableID var) const {
+  return formula->get_quantifier_type(var);
+}
+
 bool
 ResidualQBF::is_cnf_empty() const {
 

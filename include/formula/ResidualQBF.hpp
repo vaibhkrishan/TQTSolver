@@ -17,6 +17,14 @@ public:
 
     FormulaModifier modifier;
 
+    VariableStatus get_variable_status(
+        VariableID
+        ) const;
+
+    QuantifierType get_quantifier_type(
+        VariableID
+        ) const;
+
     bool is_cnf_empty() const;
 
     bool contains_empty_clause() const;

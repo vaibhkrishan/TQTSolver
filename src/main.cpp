@@ -56,11 +56,10 @@ main(
 
   SolverResult result =
     evaluator.evaluate();
-  
+
   std::cout
     << "Count result: "
     << result
     << std::endl;
-
   return 0;
 }

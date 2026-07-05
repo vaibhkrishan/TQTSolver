@@ -98,6 +98,13 @@ QDIMACSParser::parse(const std::string& filename) {
     }
   }
 
+  if (missing.size() + prefix_vars.size() > declared_vars) {
+    throw std::runtime_error(
+        "Expected " + std::to_string(declared_vars) +
+        " variables but found " + std::to_string(missing.size() + prefix_vars.size())
+        );
+  }
+
   if (!missing.empty()) {
     QuantifierBlock block(QuantifierType::EXISTS, missing);
 

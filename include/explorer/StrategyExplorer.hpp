@@ -11,7 +11,7 @@
 #include "simplify/SimplificationPipeline.hpp"
 #include "simplify/Canonicalizer.hpp"
 
-#include "explorer/BranchingHeuristic.hpp"
+#include "heuristic/BranchingHeuristic.hpp"
 #include "explorer/GameBrancher.hpp"
 
 #include "explorer/SearchState.hpp"

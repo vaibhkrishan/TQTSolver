@@ -1,4 +1,4 @@
-#include "explorer/TrivialHeuristic.hpp"
+#include "heuristic/TrivialHeuristic.hpp"
 
 VariableID
 TrivialHeuristic::choose_variable(

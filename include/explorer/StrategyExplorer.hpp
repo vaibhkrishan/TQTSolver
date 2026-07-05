@@ -9,10 +9,12 @@
 #include "cache/SemanticCache.hpp"
 
 #include "simplify/SimplificationPipeline.hpp"
-#include "simplify/Canonicalizer.hpp"
+
+#include "hashing/Canonicalizer.hpp"
 
 #include "heuristic/BranchingHeuristic.hpp"
-#include "explorer/GameBrancher.hpp"
+
+#include "branching/GameBrancher.hpp"
 
 #include "explorer/SearchState.hpp"
 #include "explorer/WorkQueue.hpp"

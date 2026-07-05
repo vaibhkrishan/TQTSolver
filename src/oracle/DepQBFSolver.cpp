@@ -52,7 +52,7 @@ OracleResult DepQBFSolver::is_fqbf(const ResidualQBF& qbf) {
     throw std::runtime_error("Could not create temp.txt");
   }
 
-  out << QDIMACSFormatter::format(qbf.materialize());
+  out << QDIMACSFormatter::format(*(qbf.materialize()));
   out.flush();
   out.close();
 

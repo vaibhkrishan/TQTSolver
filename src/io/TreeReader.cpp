@@ -454,11 +454,8 @@ TreeReader::read(
             canonicalizer
             ->canonicalize(
               *node.qbf
-              ).key,
-            CacheEntry(
-              id,
-              node.multiplier_exponent
-              )
+              ),
+              id
             );
 
         break;

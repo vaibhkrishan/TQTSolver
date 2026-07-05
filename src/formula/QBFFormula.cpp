@@ -1,104 +1,25 @@
 #include "formula/QBFFormula.hpp"
 
-QuantifierType QBFFormula::get_quantifier_type(VariableID var) const {
-  auto it = var_quantifier_map.find(var);
-  if (it != var_quantifier_map.end())
-    return it->second;
-
-  return QuantifierType::EXISTS;
-}
-
-void QBFFormula::set_quantifier_type(VariableID var, QuantifierType quantifierType) {
-  var_quantifier_map[var] = quantifierType;
-}
-
-bool
-QBFFormula::contains_pure_clause() const {
-
-  for (
-      const auto& clause :
-      matrix.clauses
-      ) {
-
-    bool pure = true;
-
-    for (
-        Literal lit :
-        clause
-        ) {
-
-      VariableID variable =
-        std::abs(lit);
-
-      auto it =
-        var_quantifier_map
-        .find(variable);
-
-      if (
-          it ==
-          var_quantifier_map
-          .end()
-         ) {
-
-        throw std::runtime_error(
-            "Unknown variable in clause."
-            );
-      }
-
-      if (
-          it->second ==
+QBFFormula::QBFFormula(
+    size_t num_variables,
+    std::vector<QuantifierBlock> prefix,
+    std::vector<std::vector<Literal>> clauses
+)
+    : num_variables(num_variables),
+      prefix(std::move(prefix)),
+      matrix(std::move(clauses)),
+      var_quantifier_map_(
+          num_variables + 1,
           QuantifierType::EXISTS
-         ) {
-
-        pure = false;
-        break;
-      }
+      )
+{
+    for (const auto& block : this->prefix) {
+        for (VariableID var : block.get_variables()) {
+            var_quantifier_map_[var] = block.get_type();
+        }
     }
-
-    if (
-        pure
-       ) {
-
-      return true;
-    }
-  }
-
-  return false;
 }
 
-bool
-QBFFormula::is_pure_existential() const {
-
-  for (
-      const auto& clause :
-      matrix.clauses
-      ) {
-
-    for (
-        Literal lit :
-        clause
-        ) {
-
-      VariableID variable =
-        std::abs(lit);
-
-      auto it =
-        var_quantifier_map.find(
-            variable
-            );
-
-      if (
-          it !=
-          var_quantifier_map.end()
-          &&
-          it->second ==
-          QuantifierType::FORALL
-         ) {
-
-        return false;
-      }
-    }
-  }
-
-  return true;
+QuantifierType QBFFormula::get_quantifier_type(VariableID var) const {
+  return var_quantifier_map_.at(var);
 }

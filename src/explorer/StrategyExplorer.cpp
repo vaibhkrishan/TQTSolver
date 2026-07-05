@@ -5,6 +5,7 @@
 
 StrategyExplorer::StrategyExplorer(std::string qbf_name, std::shared_ptr<QBFFormula> formula)
   :
+    root(formula),
     qbf_name_(qbf_name),
     checkpoint_manager_(qbf_name + ".explore"),
     tree_reader_(qbf_name + ".tqt"),
@@ -16,12 +17,6 @@ StrategyExplorer::StrategyExplorer(std::string qbf_name, std::shared_ptr<QBFForm
   canonicalizer = new Canonicalizer;
   heuristic = new TrivialHeuristic;
   brancher = new GameBrancher;
-
-  root.formula =
-    formula;
-
-  root.trail =
-    nullptr;
 }
 
 StrategyExplorer::~StrategyExplorer() {
@@ -221,21 +216,16 @@ StrategyExplorer::process_node(
 
   pipeline->run(qbf);
 
-  const auto& formula =
-    qbf.materialize();
-
-  auto canonical_info =  canonicalizer
+  auto canonical_key =  canonicalizer
     ->canonicalize(
         qbf
         );
-  node.multiplier_exponent = canonical_info.multiplier_exponent;
 
   if (
-      cache->contains(canonical_info.key)
+      cache->contains(canonical_key)
      ) {
 
-    auto cache_entry = cache->lookup(canonical_info.key);
-    node.equivalent_node = cache_entry.node_id;
+    node.equivalent_node = cache->lookup(canonical_key);
     set_status(
         node_id,
         NodeStatus::SEEN
@@ -245,8 +235,8 @@ StrategyExplorer::process_node(
   }
 
   cache->insert(
-      canonical_info.key,
-      CacheEntry(node_id, canonical_info.multiplier_exponent)
+      canonical_key,
+      node_id
       );
 
   if (

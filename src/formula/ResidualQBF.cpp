@@ -1,164 +1,355 @@
 #include "formula/ResidualQBF.hpp"
 
-const QBFFormula& ResidualQBF::materialize() const {
-  if (restricted_formula) {
-    return *restricted_formula;
-  }
-  restricted_formula =
-    std::make_shared<QBFFormula>(
-        *formula
-        );
-  restricted_formula->num_variables = 0;
+ResidualQBF::ResidualQBF(
+    std::shared_ptr<const QBFFormula> formula
+    )
+  : formula(std::move(formula)),
+  modifier(
+      this->formula->matrix.clauses.size(),
+      this->formula->num_variables
+      )
+{
+}
 
-  std::unordered_map<
-    VariableID,
-    bool
-      > assignment;
+bool
+ResidualQBF::is_cnf_empty() const {
 
-  auto current = trail;
-
-  while (current) {
-
-    assignment[current->variable]
-      = current->value;
-
-    current = current->parent;
+  for (bool active : modifier.active_clauses) {
+    if (active) {
+      return false;
+    }
   }
 
-  CNFMatrix new_matrix;
+  return true;
+}
+
+bool
+ResidualQBF::contains_empty_clause() const {
+
+  const auto& clauses =
+    formula->matrix.clauses;
 
   for (
-      const auto& clause :
-      restricted_formula->matrix.clauses
+      size_t i = 0;
+      i < clauses.size();
+      ++i
       ) {
 
-    bool satisfied = false;
+    if (
+        !modifier.active_clauses[i]
+       ) {
+      continue;
+    }
 
-    std::vector<Literal> new_clause;
+    bool empty = true;
 
-    for (Literal lit : clause) {
+    for (
+        Literal lit
+        : clauses[i]
+        ) {
 
       VariableID var =
         std::abs(lit);
 
-      auto it =
-        assignment.find(var);
+      switch (
+          modifier.variable_status[var]
+          ) {
 
-      if (
-          it == assignment.end()
-         ) {
+        case VariableStatus::ACTIVE:
+          empty = false;
+          break;
 
-        new_clause.push_back(lit);
+        case VariableStatus::INACTIVE:
+        case VariableStatus::ASSIGNED_TRUE:
+        case VariableStatus::ASSIGNED_FALSE:
+          break;
 
-        continue;
+        default:
+          break;
       }
 
-      bool assigned_value =
-        it->second;
-
-      bool lit_value =
-        (lit > 0)
-        ? assigned_value
-        : !assigned_value;
-
-      if (lit_value) {
-
-        satisfied = true;
-
+      if (!empty) {
         break;
       }
     }
 
-    if (!satisfied) {
-
-      new_matrix.clauses.push_back(
-          new_clause
-          );
+    if (empty) {
+      return true;
     }
   }
 
-  restricted_formula->matrix =
-    std::move(new_matrix);
+  return false;
+}
 
-  std::vector<QuantifierBlock>
-    new_prefix;
+bool
+ResidualQBF::contains_pure_clause() const {
+
+  const auto& clauses =
+    formula->matrix.clauses;
 
   for (
-      const auto& block :
-      restricted_formula->prefix
+      size_t i = 0;
+      i < clauses.size();
+      ++i
       ) {
 
-    QuantifierBlock new_block(block.get_type());
+    if (
+        !modifier.active_clauses[i]
+       ) {
+      continue;
+    }
 
-    const auto& vars = block.get_variables();
-    for (VariableID var :
-        vars) {
+    bool pure = true;
+    bool has_literal = false;
+
+    for (
+        Literal lit
+        : clauses[i]
+        ) {
+
+      VariableID var =
+        std::abs(lit);
 
       if (
-          assignment.find(var)
-          == assignment.end()
+          modifier.variable_status[var]
+          != VariableStatus::ACTIVE
+         ) {
+        continue;
+      }
+
+      has_literal = true;
+
+      if (
+          formula->get_quantifier_type(var)
+          == QuantifierType::EXISTS
          ) {
 
-        new_block.add_variable(var);
-        restricted_formula->num_variables++;
+        pure = false;
+        break;
       }
     }
 
-    if (!new_block.empty()) {
-      new_prefix.push_back(
-          new_block
-          );
+    if (
+        has_literal &&
+        pure
+       ) {
+      return true;
     }
   }
 
-  restricted_formula->prefix =
-    std::move(new_prefix);
-
-  return *restricted_formula;
+  return false;
 }
 
-SolverResult ResidualQBF::count_tautological_strategies() const {
+bool
+ResidualQBF::is_pure_existential() const {
 
-  const auto& formula = materialize();
-  SolverResult total = 1;
+  const auto& clauses =
+    formula->matrix.clauses;
 
-  uint64_t universal_count = 0;
-
-  for (const auto& block : formula.prefix) {
+  for (
+      size_t i = 0;
+      i < clauses.size();
+      ++i
+      ) {
 
     if (
-        block.get_type() ==
-        QuantifierType::FORALL
+        !modifier.active_clauses[i]
        ) {
-
-      universal_count +=
-        block.size();
-
       continue;
     }
 
     for (
-        size_t i = 0;
-        i < block.size();
-        ++i
+        Literal lit
+        : clauses[i]
         ) {
 
-      uint64_t strategies_exponent =
-        (
-         1
-         << universal_count
-        );
+      VariableID var =
+        std::abs(lit);
 
-      SolverResult strategies =
-        boost::multiprecision::pow(
-         SolverResult(1),
-         strategies_exponent
-        );
+      if (
+          modifier.variable_status[var]
+          != VariableStatus::ACTIVE
+         ) {
+        continue;
+      }
 
-      total *= strategies;
+      if (
+          formula->get_quantifier_type(var)
+          == QuantifierType::FORALL
+         ) {
+        return false;
+      }
     }
   }
 
-  return total;
+  return true;
 }
 
+bool ResidualQBF::is_prefix_empty() const {
+  return modifier.current_quantifier_block == formula->prefix.size();
+}
+
+SolverResult
+ResidualQBF::count_tautological_strategies() const {
+
+  ExponentType exponent = 0;
+
+  ExponentType dependency_size = 0;
+
+  for (
+      size_t i = modifier.current_quantifier_block;
+      i < formula->prefix.size();
+      ++i
+      ) {
+
+    const auto& block =
+      formula->prefix[i];
+
+    ExponentType active_variables = 0;
+
+    for (
+        VariableID var
+        : block.get_variables()
+        ) {
+
+      if (
+          modifier.variable_status[var]
+          == VariableStatus::ACTIVE
+         ) {
+
+        ++active_variables;
+      }
+    }
+
+    if (
+        block.get_type()
+        == QuantifierType::FORALL
+       ) {
+
+      dependency_size +=
+        active_variables;
+    }
+    else {
+
+      exponent +=
+        active_variables
+        * (ExponentType(1)
+            << dependency_size);
+    }
+  }
+
+  return SolverResult(1) << exponent;
+}
+
+std::unique_ptr<QBFFormula>
+ResidualQBF::materialize() const {
+
+  std::vector<QuantifierBlock> prefix;
+
+  std::unordered_map<
+    VariableID,
+    VariableID
+      > renaming;
+
+  VariableID next_variable = 1;
+
+  for (
+      size_t i = modifier.current_quantifier_block;
+      i < formula->prefix.size();
+      ++i
+      ) {
+
+    const auto& old_block =
+      formula->prefix[i];
+
+    std::vector<VariableID>
+      variables;
+
+    for (
+        VariableID var
+        : old_block.get_variables()
+        ) {
+
+      if (
+          modifier.variable_status[var]
+          != VariableStatus::ACTIVE
+         ) {
+        continue;
+      }
+
+      renaming[var] =
+        next_variable;
+
+      variables.push_back(
+          next_variable
+          );
+
+      ++next_variable;
+    }
+
+    if (
+        !variables.empty()
+       ) {
+
+      prefix.emplace_back(
+          old_block.get_type(),
+          variables
+          );
+    }
+  }
+
+  std::vector<
+    std::vector<Literal>
+    > clauses;
+
+  for (
+      size_t i = 0;
+      i < formula->matrix.clauses.size();
+      ++i
+      ) {
+
+    if (
+        !modifier.active_clauses[i]
+       ) {
+      continue;
+    }
+
+    std::vector<Literal>
+      clause;
+
+    for (
+        Literal lit
+        : formula->matrix.clauses[i]
+        ) {
+
+      VariableID var =
+        std::abs(lit);
+
+      if (
+          modifier.variable_status[var]
+          != VariableStatus::ACTIVE
+         ) {
+        continue;
+      }
+
+      VariableID new_var =
+        renaming.at(var);
+
+      clause.push_back(
+          lit > 0
+          ? new_var
+          : -new_var
+          );
+    }
+
+    clauses.push_back(
+        std::move(clause)
+        );
+  }
+
+  return std::make_unique<QBFFormula>(
+      next_variable - 1,
+      std::move(prefix),
+      std::move(clauses)
+      );
+}

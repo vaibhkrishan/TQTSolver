@@ -1,20 +1,12 @@
 #include "formula/CNFMatrix.hpp"
 
-CNFMatrix CNFMatrix::restrict_literal(
-    Literal lit
-    ) const {
-  return *this;
+CNFMatrix::CNFMatrix(
+    std::vector<std::vector<Literal>> clauses
+)
+    : clauses(std::move(clauses))
+{
 }
 
-bool CNFMatrix::empty() const {
-  return clauses.empty();
-}
-
-bool CNFMatrix::contains_empty_clause() const {
-  for (const auto& clause : clauses) {
-    if (clause.empty()) {
-      return true;
-    }
-  }
-  return false;
+const std::vector<std::vector<Literal>>& CNFMatrix::get_clauses() const {
+  return clauses;
 }

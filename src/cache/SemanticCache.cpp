@@ -7,7 +7,7 @@ bool SemanticCache::contains(
     != value_cache.end();
 }
 
-CacheEntry SemanticCache::lookup(
+NodeID SemanticCache::lookup(
     const std::string& key
     ) const {
   return value_cache.at(key);
@@ -15,7 +15,7 @@ CacheEntry SemanticCache::lookup(
 
 void SemanticCache::insert(
     const std::string& key,
-    CacheEntry result
+    NodeID node_id
     ) {
-  value_cache[key] = std::move(result);
+  value_cache[key] = node_id;
 }

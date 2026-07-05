@@ -5,20 +5,23 @@ TrivialHeuristic::choose_variable(
     const ResidualQBF& qbf
     ) {
 
-  const QBFFormula& formula =
-    qbf.materialize();
+  const auto& block =
+    qbf.formula->prefix[
+    qbf.modifier.current_quantifier_block
+    ];
 
-  for (const auto& block :
-      formula.prefix) {
+  for (
+      VariableID var
+      : block.get_variables()
+      ) {
 
-
-    const auto& vars = block.get_variables();
-    for (VariableID var :
-        vars) {
-
+    if (
+        qbf.modifier.variable_status[var]
+        == VariableStatus::ACTIVE
+       ) {
       return var;
     }
   }
 
-  return -1;
+  std::abort();
 }

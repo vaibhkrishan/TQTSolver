@@ -3,10 +3,12 @@
 #include <string>
 
 #include "explorer/SearchState.hpp"
-#include "explorer/GameBrancher.hpp"
+
+#include "branching/GameBrancher.hpp"
 
 #include "cache/SemanticCache.hpp"
-#include "simplify/Canonicalizer.hpp"
+
+#include "hashing/Canonicalizer.hpp"
 
 class TreeReader {
   public:

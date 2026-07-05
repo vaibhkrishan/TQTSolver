@@ -104,13 +104,12 @@ QDIMACSParser::parse(const std::string& filename) {
     prefix.insert(prefix.begin(), block);
   }
 
-  auto formula = std::make_shared<QBFFormula>();
-
   std::unordered_map<
     VariableID,
     VariableID
       > old_to_new;
 
+  std::vector<QuantifierBlock> new_prefix;
   VariableID next = 1;
 
   for (auto& block : prefix) {
@@ -126,12 +125,12 @@ QDIMACSParser::parse(const std::string& filename) {
       ++next;
     }
 
-    formula->prefix.push_back(
+    new_prefix.push_back(
         std::move(new_block)
         );
   }
 
-  formula->num_variables = next - 1;
+  std::vector<std::vector<Literal>> new_clauses;
 
   for (const auto& clause : clauses) {
 
@@ -151,10 +150,17 @@ QDIMACSParser::parse(const std::string& filename) {
           );
     }
 
-    formula->matrix.clauses.push_back(
+    new_clauses.push_back(
         std::move(new_clause)
         );
   }
+
+  auto formula =
+    std::make_shared<QBFFormula>(
+        next-1,
+        std::move(new_prefix),
+        std::move(new_clauses));
+
   return formula;
 }
 

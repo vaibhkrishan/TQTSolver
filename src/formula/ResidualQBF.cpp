@@ -282,7 +282,10 @@ ResidualQBF::materialize() const {
 
       if (
           modifier.variable_status[var]
-          != VariableStatus::ACTIVE
+          == VariableStatus::ASSIGNED_TRUE
+          or
+          modifier.variable_status[var]
+          == VariableStatus::ASSIGNED_FALSE
          ) {
         continue;
       }
@@ -337,7 +340,10 @@ ResidualQBF::materialize() const {
 
       if (
           modifier.variable_status[var]
-          != VariableStatus::ACTIVE
+          == VariableStatus::ASSIGNED_TRUE
+          or
+          modifier.variable_status[var]
+          == VariableStatus::ASSIGNED_FALSE
          ) {
         continue;
       }

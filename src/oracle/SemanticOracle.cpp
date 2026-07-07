@@ -127,6 +127,9 @@ bool SemanticOracle::equivalent(
 
   int result = run_qsole("left.qdimacs", "right.qdimacs", f1->num_variables);
 
+  std::remove("left.qdimacs");
+  std::remove("right.qdimacs");
+
   if (result == 10) return true;
   if (result == 20) return false;
 

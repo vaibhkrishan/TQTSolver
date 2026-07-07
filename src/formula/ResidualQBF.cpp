@@ -254,6 +254,7 @@ ResidualQBF::count_tautological_strategies() const {
 std::unique_ptr<QBFFormula>
 ResidualQBF::materialize() const {
 
+
   std::vector<QuantifierBlock> prefix;
 
   std::unordered_map<
@@ -309,47 +310,68 @@ ResidualQBF::materialize() const {
           variables
           );
     }
-  }
+ }
 
-  std::vector<
+std::vector<
     std::vector<Literal>
     > clauses;
 
+for (
+    size_t i = 0;
+    i < formula->matrix.clauses.size();
+    ++i
+    ) {
+
+  if (!modifier.active_clauses[i]) {
+    continue;
+  }
+
+  std::vector<Literal> clause;
+
+  bool clause_satisfied = false;
+
   for (
-      size_t i = 0;
-      i < formula->matrix.clauses.size();
-      ++i
+      Literal lit
+      : formula->matrix.clauses[i]
       ) {
 
-    if (
-        !modifier.active_clauses[i]
-       ) {
-      continue;
-    }
+    VariableID var = std::abs(lit);
 
-    std::vector<Literal>
-      clause;
+    VariableStatus status =
+        modifier.variable_status[var];
 
-    for (
-        Literal lit
-        : formula->matrix.clauses[i]
-        ) {
-
-      VariableID var =
-        std::abs(lit);
-
-      if (
-          modifier.variable_status[var]
-          == VariableStatus::ASSIGNED_TRUE
-          or
-          modifier.variable_status[var]
-          == VariableStatus::ASSIGNED_FALSE
-         ) {
+    
+    if (status == VariableStatus::ASSIGNED_TRUE)
+    {
+      if (lit > 0)
+      {
+        clause_satisfied = true;
+        break;
+      }
+      else
+      {
         continue;
       }
+    }
 
+    if (status == VariableStatus::ASSIGNED_FALSE)
+    {
+      if (lit < 0)
+      {
+        clause_satisfied = true;
+        break;
+      }
+      else
+      {
+        continue;
+      }
+    }
+
+    
+    if (status == VariableStatus::ACTIVE)
+    {
       VariableID new_var =
-        renaming.at(var);
+          renaming.at(var);
 
       clause.push_back(
           lit > 0
@@ -357,11 +379,17 @@ ResidualQBF::materialize() const {
           : -new_var
           );
     }
-
-    clauses.push_back(
-        std::move(clause)
-        );
   }
+
+  if (clause_satisfied)
+  {
+    continue;
+  }
+
+  clauses.push_back(
+      std::move(clause)
+      );
+}
 
   return std::make_unique<QBFFormula>(
       next_variable - 1,

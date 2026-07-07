@@ -22,9 +22,9 @@ int run_depqbf(const char *qdimacs_file)
     dup2(dev_null, STDERR_FILENO);
 
     close(dev_null);
-    execlp("/Users/vkrishan/tools/caqe", "/Users/vkrishan/tools/caqe",
-        qdimacs_file,
-        (char *)NULL);
+    execlp("depqbf", "depqbf", "--max-secs=300",
+              qdimacs_file,
+              (char *)NULL);
 
     perror("execl");
     exit(1);

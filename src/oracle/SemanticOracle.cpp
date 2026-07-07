@@ -11,6 +11,7 @@
 #include <fstream>
 #include <stdexcept>
 
+#include <cmath>
 #include <sys/stat.h>
 #include <signal.h>
 #include <chrono>
@@ -25,8 +26,8 @@ int run_qsole(const char *f1, const char *f2, int num_vars)
 
   size_t max_size = std::max(st1.st_size, st2.st_size);
 
-  int timeout = std::min(300,
-      5 + static_cast<int>(max_size / 50000));
+  int timeout = (max_size >= 512 * 1024) ? 300 :
+    90 + static_cast<int>((1.0 - std::pow(1.0 - (double)max_size / (512 * 1024), 2)) * 210);
 
   pid_t pid = fork();
 
@@ -58,13 +59,13 @@ int run_qsole(const char *f1, const char *f2, int num_vars)
     int status;
     pid_t r = waitpid(pid, &status, WNOHANG);
 
-    if (r == pid)
-    {
-      if (!WIFEXITED(status))
+if (r == pid)
+{
+    if (!WIFEXITED(status))
         return -1;
 
-      return WEXITSTATUS(status);
-    }
+    return WEXITSTATUS(status);
+}
 
     if (r == -1)
       return -1;
@@ -111,6 +112,7 @@ bool SemanticOracle::equivalent(
     const ResidualQBF& left,
     const ResidualQBF& right)
 {
+
   auto f1 = left.materialize();
   auto f2 = right.materialize();
 
@@ -125,13 +127,16 @@ bool SemanticOracle::equivalent(
   out1.close();
   out2.close();
 
+
+
   int result = run_qsole("left.qdimacs", "right.qdimacs", f1->num_variables);
 
-  std::remove("left.qdimacs");
-  std::remove("right.qdimacs");
+std::remove("left.qdimacs");
+std::remove("right.qdimacs");
 
-  if (result == 10) return true;
-  if (result == 20) return false;
+
+    if (result == 10) return true;
+    if (result == 20) return false;
 
   if (result == -2)
   {

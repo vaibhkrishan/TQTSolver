@@ -55,6 +55,8 @@ OracleResult DepQBFSolver::is_fqbf(const ResidualQBF& qbf) {
   out << QDIMACSFormatter::format(*(qbf.materialize()));
   out.flush();
   out.close();
+  
+  std::remove(temp_file);
 
   int result = run_depqbf("temp.txt");
   if (result == 10)

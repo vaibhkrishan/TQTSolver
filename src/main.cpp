@@ -1,6 +1,7 @@
 #include <iostream>
 #include <filesystem>
 #include <chrono>
+#include <iomanip>
 
 #include "explorer/StrategyExplorer.hpp"
 
@@ -41,6 +42,8 @@ main(
         *formula
         )
     << std::endl;
+	
+std::cout << std::fixed << std::setprecision(4);
 
 auto exploration_start =
     std::chrono::steady_clock::now();

@@ -4,7 +4,10 @@
 
 #include <iostream>
 
-StrategyExplorer::StrategyExplorer(std::string qbf_name, std::shared_ptr<QBFFormula> formula)
+StrategyExplorer::StrategyExplorer(
+    std::string qbf_name,
+    std::shared_ptr<QBFFormula> formula,
+    bool use_qsole)
   :
     root(formula),
     qbf_name_(qbf_name),
@@ -12,7 +15,7 @@ StrategyExplorer::StrategyExplorer(std::string qbf_name, std::shared_ptr<QBFForm
     tree_reader_(qbf_name + ".tqt"),
     tree_writer_(qbf_name + ".tqt")
 {
-  oracle = new SemanticOracle;
+  oracle = new SemanticOracle(use_qsole);
   cache = new SemanticCache;
   pipeline = new SimplificationPipeline;
   canonicalizer = new Canonicalizer;

@@ -8,7 +8,7 @@ class SemanticOracle {
     TautChecker* taut_checker;
     FQBFSolver* fqbf_solver;
 
-    SemanticOracle();
+    SemanticOracle(bool use_qsole = true);
     bool equivalent(
         const ResidualQBF& left,
         const ResidualQBF& right
@@ -19,4 +19,6 @@ class SemanticOracle {
     OracleResult is_fqbf(
         const ResidualQBF& qbf
         );
+private:
+    bool use_qsole_;
 }; // class SemanticOracle

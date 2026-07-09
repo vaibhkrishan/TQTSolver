@@ -90,7 +90,8 @@ if (r == pid)
   }
 }
 
-SemanticOracle::SemanticOracle() {
+SemanticOracle::SemanticOracle(bool use_qsole)
+    : use_qsole_(use_qsole) {
   taut_checker = new CNFTautChecker;
   fqbf_solver = new DepQBFSolver;
 }
@@ -112,6 +113,10 @@ bool SemanticOracle::equivalent(
     const ResidualQBF& left,
     const ResidualQBF& right)
 {
+
+if (!use_qsole_) {
+        return false;
+    }
 
   auto f1 = left.materialize();
   auto f2 = right.materialize();

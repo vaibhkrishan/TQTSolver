@@ -16,26 +16,37 @@ main(
     char* argv[]
     ) {
 
-  if (argc <= 1) {
+if (argc <= 1) {
+        std::cerr << "Usage: " << argv[0]
+                  << " <input.qdimacs> [--no_qsole]" << std::endl;
+        return 1;
+    }
 
-    std::cerr
-      << "Please provide the file containing QBF definition"
-      << std::endl;
+    bool useQsole = true;
+    std::string inputFile;
 
-    return 1;
-  }
+    for (int i = 1; i < argc; ++i) {
+        std::string arg(argv[i]);
 
-  QDIMACSParser parser;
-  std::string iFileName(argv[1]);
-  std::filesystem::path iFilePath(iFileName);
-  iFilePath.replace_extension("");
+        if (arg == "--no_qsole") {
+            useQsole = false;
+        } else {
+            inputFile = arg;
+        }
+    }
 
-  auto qBFName = iFilePath.string();
+    if (inputFile.empty()) {
+        std::cerr << "No input file specified." << std::endl;
+        return 1;
+    }
 
-  auto formula =
-    parser.parse(
-        iFileName
-        );
+    QDIMACSParser parser;
+    std::filesystem::path iFilePath(inputFile);
+    iFilePath.replace_extension("");
+
+    auto qBFName = iFilePath.string();
+
+    auto formula = parser.parse(inputFile);
 
   std::cout
     << QBFFormatter::format(
@@ -48,7 +59,7 @@ std::cout << std::fixed << std::setprecision(4);
 auto exploration_start =
     std::chrono::steady_clock::now();
 
-  StrategyExplorer explorer(qBFName, formula);
+ StrategyExplorer explorer(qBFName, formula, useQsole);
 
   explorer.explore();
 

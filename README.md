@@ -1,4 +1,4 @@
-# CQBFSolver
+# TQTSolver
 A QBF compiler which provides a Truncated Quantified Tree (TQT) representation for a given QBF. 
 The TQT can inturn be used to count the number of winning strategies in the QBF.
 
@@ -15,4 +15,4 @@ Running the toolchain requires the following:
 
 - to create the build directory: cmake -S . -B build
 - from inside build directory: make
-- to run: ./build/qbf_solver test/sample1.txt
+- to run: ./build/qbf_solver test/sample1.qdimacs (or) ./build/qbf_solver test/sample2.qdimacs --no_qsole

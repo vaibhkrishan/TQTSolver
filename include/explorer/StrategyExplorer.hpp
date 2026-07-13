@@ -28,7 +28,9 @@
 class StrategyExplorer {
   public:
 
-    StrategyExplorer(std::string, std::shared_ptr<QBFFormula>);
+    StrategyExplorer(std::string,
+                 std::shared_ptr<QBFFormula>,
+                 bool use_qsole = true);
     ~StrategyExplorer();
 
     SemanticOracle* oracle;
@@ -50,6 +52,8 @@ class StrategyExplorer {
     const SearchState&
       state() const;
   private:
+
+bool use_qsole_;
 
     std::string qbf_name_;
     SearchState state_;

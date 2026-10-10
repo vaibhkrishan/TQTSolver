@@ -48,11 +48,11 @@ if (argc <= 1) {
 
     auto formula = parser.parse(inputFile);
 
-  std::cout
+/*  std::cout
     << QBFFormatter::format(
         *formula
         )
-    << std::endl;
+    << std::endl; */
 	
 std::cout << std::fixed << std::setprecision(4);
 
